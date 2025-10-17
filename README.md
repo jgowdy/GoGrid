@@ -1,8 +1,8 @@
 # GoGrid Worker
 
-**Distributed GPU Inference Network Client**
+**Distributed GPU Inference Network**
 
-GoGrid Worker is a system tray application that allows you to contribute your idle GPU resources to the GoGrid distributed inference network. Earn rewards while your computer is idle by processing AI inference workloads.
+GoGrid Worker is a system tray application for running your own private distributed GPU compute network. Use idle GPU resources across your personal machines or corporate infrastructure to process AI inference workloads.
 
 ## Features
 
@@ -10,8 +10,9 @@ GoGrid Worker is a system tray application that allows you to contribute your id
 - 🔄 **Auto-Updates** - Seamlessly updates to the latest version
 - 🎮 **GPU Accelerated** - Supports NVIDIA CUDA and Apple Metal
 - 🌐 **Cross-Platform** - macOS (ARM64 & Intel), Linux, and Windows
-- 📊 **Real-time Stats** - Monitor your earnings and jobs completed
+- 📊 **Real-time Stats** - Monitor job completion and GPU usage
 - ⚡ **Efficient** - Minimal resource usage when idle
+- 🔒 **Private** - Run your own coordinator server
 
 ## Download
 
@@ -119,8 +120,8 @@ Central server that manages the network:
 
 Backend services for job management:
 - Job submission and queueing
-- Payment processing
-- User dashboard
+- Job prioritization
+- Management dashboard
 - (Not included in this repository)
 
 ## Auto-Updates
@@ -144,7 +145,7 @@ The worker connects to `bx.ee:8443` by default. Settings can be configured throu
 - **Pause/Resume** - Stop accepting new jobs
 - **GPU Settings** - Limit VRAM usage
 - **Network Settings** - Custom coordinator URL
-- **Dashboard** - View earnings and statistics
+- **Dashboard** - View job statistics and GPU usage
 
 Configuration is stored at:
 - **macOS**: `~/Library/Application Support/GoGrid Worker/`
@@ -256,3 +257,49 @@ Built with:
 ---
 
 Made with ❤️ by the GoGrid team
+
+## Configuration
+
+### Coordinator Endpoint
+
+By default, GoGrid Worker connects to `bx.ee:8443`. To use your own coordinator:
+
+**Environment Variables**:
+```bash
+export GOGRID_COORDINATOR_HOST=your-server.com
+export GOGRID_COORDINATOR_PORT=8443
+```
+
+**macOS** (launchd):
+```bash
+# Edit ~/Library/LaunchAgents/com.gogrid.worker.plist
+<key>EnvironmentVariables</key>
+<dict>
+    <key>GOGRID_COORDINATOR_HOST</key>
+    <string>your-server.com</string>
+    <key>GOGRID_COORDINATOR_PORT</key>
+    <string>8443</string>
+</dict>
+```
+
+**Linux** (systemd):
+```bash
+# Create ~/.config/systemd/user/gogrid-worker.service.d/override.conf
+[Service]
+Environment="GOGRID_COORDINATOR_HOST=your-server.com"
+Environment="GOGRID_COORDINATOR_PORT=8443"
+```
+
+**Windows**:
+```cmd
+setx GOGRID_COORDINATOR_HOST your-server.com
+setx GOGRID_COORDINATOR_PORT 8443
+```
+
+### Update Server
+
+The update endpoints are configured in `tauri.conf.json`. By default:
+- Primary: `https://bx.ee:8443/updates/`
+- Fallback: `https://gogrid-updates.example.com/updates/`
+
+To host your own update server, see [AUTO_UPDATE.md](AUTO_UPDATE.md).

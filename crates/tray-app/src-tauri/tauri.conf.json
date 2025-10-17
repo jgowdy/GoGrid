@@ -24,7 +24,8 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://bx.ee:8443/updates/{{target}}/{{current_version}}"
+        "https://bx.ee:8443/updates/{{target}}/{{current_version}}",
+        "https://gogrid-updates.example.com/updates/{{target}}/{{current_version}}"
       ],
       "pubkey": ""
     }

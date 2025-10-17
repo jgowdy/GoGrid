@@ -8,10 +8,23 @@ use tokio::sync::RwLock;
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
-const COORDINATOR_HOST: &str = "bx.ee";
-const COORDINATOR_PORT: u16 = 8443;
+// Default coordinator settings (can be overridden via environment variables or config)
+const DEFAULT_COORDINATOR_HOST: &str = "bx.ee";
+const DEFAULT_COORDINATOR_PORT: u16 = 8443;
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(30);
 const RECONNECT_INTERVAL: Duration = Duration::from_secs(10);
+
+fn get_coordinator_host() -> String {
+    std::env::var("GOGRID_COORDINATOR_HOST")
+        .unwrap_or_else(|_| DEFAULT_COORDINATOR_HOST.to_string())
+}
+
+fn get_coordinator_port() -> u16 {
+    std::env::var("GOGRID_COORDINATOR_PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(DEFAULT_COORDINATOR_PORT)
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkerInfo {
@@ -89,7 +102,9 @@ impl CoordinatorClient {
     }
 
     pub async fn connect(&mut self) -> Result<()> {
-        info!("Connecting to coordinator at {}:{}...", COORDINATOR_HOST, COORDINATOR_PORT);
+        let coordinator_host = get_coordinator_host();
+        let coordinator_port = get_coordinator_port();
+        info!("Connecting to coordinator at {}:{}...", coordinator_host, coordinator_port);
 
         // Create QUIC client configuration with relaxed certificate verification
         // In production, we should use proper certificate verification
@@ -117,11 +132,11 @@ impl CoordinatorClient {
         endpoint.set_default_client_config(client_config);
 
         // Connect to coordinator
-        let server_addr = match format!("{}:{}", COORDINATOR_HOST, COORDINATOR_PORT).parse::<SocketAddr>() {
+        let server_addr = match format!("{}:{}", coordinator_host, coordinator_port).parse::<SocketAddr>() {
             Ok(addr) => addr,
             Err(_) => {
                 // If parsing fails, try DNS resolution
-                tokio::net::lookup_host(format!("{}:{}", COORDINATOR_HOST, COORDINATOR_PORT))
+                tokio::net::lookup_host(format!("{}:{}", coordinator_host, coordinator_port))
                     .await
                     .context("Failed to resolve hostname")?
                     .next()
@@ -130,7 +145,7 @@ impl CoordinatorClient {
         };
 
         let connection = endpoint
-            .connect(server_addr, COORDINATOR_HOST)
+            .connect(server_addr, &coordinator_host)
             .context("Failed to initiate connection")?
             .await
             .context("Failed to establish connection")?;
