@@ -192,7 +192,59 @@ See [.github/RELEASE.md](.github/RELEASE.md) for release process.
 - [PLATFORMS.md](PLATFORMS.md) - Platform-specific information
 - [.github/RELEASE.md](.github/RELEASE.md) - Release process
 
-## Security
+## Security & Privacy
+
+GoGrid is designed with security as a core principle for private infrastructure:
+
+### Network Security
+
+- **QUIC Protocol** - Modern encrypted transport using Quinn (Rust implementation)
+  - TLS 1.3 encryption for all coordinator-worker communication
+  - Built-in connection security and authentication
+  - Resistant to connection hijacking and replay attacks
+
+- **Configurable Endpoints** - Run your own coordinator server
+  - No external dependencies on third-party services
+  - Full control over network topology
+  - Isolated from public networks
+
+### Sandboxing & Isolation
+
+- **Process Isolation** - Worker and scheduler run as separate processes
+  - Tauri's security model isolates GUI from compute workloads
+  - Scheduler process can be run with restricted privileges
+  - Limited filesystem access via Tauri security policies
+
+- **Resource Limits** - Configurable GPU VRAM usage caps
+  - Prevents runaway jobs from consuming all resources
+  - User-controlled execution boundaries
+
+### User Experience & Non-Intrusive Operation
+
+- **Minimal Disruption**
+  - System tray application runs in background
+  - No pop-ups or notifications during normal operation
+  - Silent auto-updates (download in background, prompt only when ready)
+  - Jobs automatically pause when user activity detected (planned)
+
+- **Respectful Resource Usage**
+  - Only uses idle GPU resources
+  - Configurable GPU usage limits
+  - Automatic throttling when system is under load
+  - Low memory footprint when idle
+
+- **Smart Scheduling**
+  - Updates check on startup (after 5s delay) and every 24 hours
+  - Update installation only prompts when convenient
+  - No forced restarts
+  - Jobs complete before shutdown/update
+
+### Data Privacy
+
+- **No Telemetry** - Zero analytics or tracking
+- **Local Configuration** - All settings stored locally
+- **Private Network** - Jobs and data never leave your infrastructure
+- **No External Dependencies** - Can run completely air-gapped
 
 ### Reporting Vulnerabilities
 
@@ -200,17 +252,18 @@ Please report security vulnerabilities to: security@bx.ee
 
 Do not open public issues for security concerns.
 
-### Update Signing (TODO)
+### Planned Security Enhancements
 
-Currently, updates are not cryptographically signed. This will be added in a future release:
+- **Update Signing** - Cryptographic verification of updates
+  ```bash
+  # Will use Tauri's built-in signing
+  tauri signer generate -w ~/.tauri/gogrid.key
+  tauri signer sign update.tar.gz
+  ```
 
-```bash
-# Generate signing key
-tauri signer generate -w ~/.tauri/gogrid.key
-
-# Sign updates
-tauri signer sign update.tar.gz
-```
+- **Certificate Pinning** - Pin coordinator TLS certificates
+- **Worker Authentication** - Optional API keys for worker registration
+- **Job Sandboxing** - Additional process isolation for inference workloads
 
 ## License
 
