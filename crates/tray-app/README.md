@@ -6,7 +6,7 @@ A cross-platform system tray application for managing the GoGrid distributed GPU
 
 - **System Tray Integration**: Runs in the background with a system tray icon
 - **Worker Process Management**: Start, stop, and monitor the worker process
-- **QUIC Connection**: Connects to the GoGrid coordinator at bx.ee:8443
+- **QUIC Connection**: Connects to the GoGrid coordinator server
 - **Automatic Registration**: Registers worker with coordinator on startup
 - **Heartbeat Monitoring**: Maintains connection with 30-second heartbeats
 - **Resource Management**: Integrates with the scheduler's adaptive throttling system
@@ -122,14 +122,14 @@ chmod +x GoGrid_Worker-0.1.0-x86_64.AppImage
 - **Resume Worker**: Starts the worker process
 - **Settings**: Configure worker settings (coming soon)
 - **Statistics**: View worker stats and earnings (coming soon)
-- **Open Dashboard**: Opens bx.ee dashboard in browser
+- **Open Dashboard**: Opens coordinator dashboard in browser
 - **Quit**: Stops worker and exits the application
 
 ### Configuration
 
 The tray app automatically:
 - Locates the worker binary (corpgrid-scheduler)
-- Connects to coordinator at bx.ee:8443
+- Connects to the configured coordinator server
 - Registers the worker with a unique ID
 - Starts sending heartbeats every 30 seconds
 
@@ -171,7 +171,7 @@ tail -f ~/.local/share/gogrid/logs/gogrid-tray.log
 
 ```bash
 # Test connection to coordinator
-nc -zv bx.ee 8443
+nc -zv your-server.com 8443
 ```
 
 ## Protocol
@@ -195,9 +195,9 @@ nc -zv bx.ee 8443
 
 ### App doesn't start
 
-1. Check if port 8443 is accessible:
+1. Check if coordinator port is accessible:
    ```bash
-   telnet bx.ee 8443
+   telnet your-server.com 8443
    ```
 
 2. Verify worker binary exists:
@@ -222,7 +222,7 @@ nc -zv bx.ee 8443
 
 - Firewall may be blocking UDP port 8443
 - Check network connectivity
-- Verify coordinator is running: `curl -I https://bx.ee`
+- Verify coordinator is running on your server
 
 ## License
 

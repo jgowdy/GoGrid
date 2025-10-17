@@ -69,12 +69,12 @@ The Heterogeneous Pipeline project has successfully implemented a production-rea
 ### Blocked by External Factors
 
 #### 1. Test with Real CUDA + Metal GPUs
-**Status:** Waiting for CUDA server (bx.ee) to come online
-**Blocker:** Remote Linux server unreachable for ~30+ minutes
+**Status:** Awaiting CUDA server availability
+**Blocker:** Remote Linux server with CUDA GPU needed
 **Impact:** Cannot validate true heterogeneous performance across different GPU vendors
 **Next Steps:**
-- Monitor server availability
-- Once online, deploy CUDA binaries to Linux server
+- Set up Linux server with CUDA GPU
+- Deploy CUDA binaries to Linux server
 - Run distributed pipeline with Metal (macOS) + CUDA (Linux)
 - Measure cross-backend transfer overhead
 - Validate fault tolerance with heterogeneous hardware

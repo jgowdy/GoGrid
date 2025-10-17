@@ -83,6 +83,9 @@ pub struct JobResult {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Initialize Rustls crypto provider
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     tracing_subscriber::fmt()
         .with_env_filter("info")
         .json()
@@ -96,7 +99,7 @@ async fn main() -> Result<()> {
     let registry = Arc::new(RwLock::new(WorkerRegistry::new()));
 
     // Generate self-signed certificate for development
-    let cert = rcgen::generate_simple_self_signed(vec!["bx.ee".to_string(), "localhost".to_string()])
+    let cert = rcgen::generate_simple_self_signed(vec!["localhost".to_string()])
         .context("Failed to generate certificate")?;
     let cert_der = cert.serialize_der()
         .context("Failed to serialize certificate")?;
@@ -463,13 +466,10 @@ async fn downloads_page() -> Html<String> {
                 to the GoGrid distributed inference network. Earn rewards while your computer is idle.
             </p>
             <p style="margin-top: 1rem;">
-                <a href="https://bx.ee/dashboard" style="color: #00d9ff; text-decoration: none;">
-                    Dashboard
-                </a> •
                 <a href="https://github.com/gogrid" style="color: #00d9ff; text-decoration: none;">
                     GitHub
                 </a> •
-                <a href="https://bx.ee/docs" style="color: #00d9ff; text-decoration: none;">
+                <a href="https://github.com/gogrid/gogrid/wiki" style="color: #00d9ff; text-decoration: none;">
                     Documentation
                 </a>
             </p>
@@ -528,7 +528,7 @@ async fn get_update_manifest(
         target.clone(),
         PlatformUpdate {
             signature: String::new(), // TODO: Add actual signature
-            url: format!("https://bx.ee:8443/files/{}", platform_file),
+            url: format!("https://localhost:8443/files/{}", platform_file),
         },
     );
 

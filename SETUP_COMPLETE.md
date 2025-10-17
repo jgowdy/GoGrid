@@ -9,8 +9,8 @@
 - **Complete source code**: All crates, documentation, and build scripts
 
 ### ✅ Configurable Endpoint
-- **Environment Variables**: 
-  - `GOGRID_COORDINATOR_HOST` (default: `bx.ee`)
+- **Environment Variables**:
+  - `GOGRID_COORDINATOR_HOST` (default: `coordinator.example.com`)
   - `GOGRID_COORDINATOR_PORT` (default: `8443`)
 - **Users can now run their own coordinators!**
 - Documentation added to README.md
@@ -20,7 +20,7 @@
   - Triggered by tags (v*)
   - Builds macOS (ARM64 + Intel), Linux, Windows
   - Creates GitHub releases with artifacts
-  - Auto-deploys to bx.ee (when SSH key is configured)
+  - Auto-deploys to coordinator server (when SSH key is configured)
   
 - **Test Workflow** (`.github/workflows/build-test.yml`):
   - Triggered by PRs and pushes to main/develop
@@ -53,7 +53,7 @@
 - Replaces the "damn blue square"!
 
 ### ✅ Downloads Page
-- Beautiful gradient UI at https://bx.ee:8443/downloads
+- Beautiful gradient UI at coordinator server
 - Lists all platforms
 - Direct download links
 
@@ -84,7 +84,7 @@ The GitHub Actions workflow is building:
 2. **If builds succeed**:
    - Artifacts will be in GitHub release
    - Download and test installers
-   - Deploy to bx.ee
+   - Deploy to coordinator server
 
 3. **If builds fail**:
    - Check logs: https://github.com/jgowdy-godaddy/GoGrid/actions
@@ -96,10 +96,10 @@ The GitHub Actions workflow is building:
    ```bash
    # Generate key
    ssh-keygen -t ed25519 -C "github-actions@gogrid" -f ~/.ssh/gogrid_deploy
-   
-   # Add to bx.ee
-   ssh-copy-id -i ~/.ssh/gogrid_deploy.pub bx.ee
-   
+
+   # Add to your coordinator server
+   ssh-copy-id -i ~/.ssh/gogrid_deploy.pub your-server.com
+
    # Add private key to GitHub Secrets
    # Settings → Secrets → Actions → New secret
    # Name: SSH_PRIVATE_KEY
@@ -192,12 +192,12 @@ gh release view v0.1.0 --repo jgowdy-godaddy/GoGrid
 
 ### Deployment
 ```bash
-# Deploy to bx.ee
+# Deploy to your coordinator server
 ./deploy_updates.sh
 
 # Or manually
-scp target/release/gogrid-coordinator bx.ee:/opt/gogrid/bin/
-ssh bx.ee "doas systemctl restart gogrid-coordinator"
+scp target/release/gogrid-coordinator your-server.com:/opt/gogrid/bin/
+ssh your-server.com "sudo systemctl restart gogrid-coordinator"
 ```
 
 ## Troubleshooting
@@ -209,13 +209,13 @@ ssh bx.ee "doas systemctl restart gogrid-coordinator"
 4. Check for platform-specific issues
 
 ### Can't Connect to Coordinator
-1. Verify coordinator is running: `ssh bx.ee "pgrep gogrid-coordinator"`
-2. Check firewall: `ssh bx.ee "doas pfctl -sr | grep 8443"`
-3. Test manually: `telnet bx.ee 8443`
-4. Check logs: `ssh bx.ee "doas journalctl -u gogrid-coordinator -f"`
+1. Verify coordinator is running: `ssh your-server.com "pgrep gogrid-coordinator"`
+2. Check firewall rules on your server
+3. Test manually: `telnet your-server.com 8443`
+4. Check logs: `ssh your-server.com "sudo journalctl -u gogrid-coordinator -f"`
 
 ### Auto-Update Not Working
-1. Verify update server is accessible: `curl https://bx.ee:8443/updates/darwin-aarch64/0.1.0`
+1. Verify update server is accessible: `curl https://your-server.com:8443/updates/darwin-aarch64/0.1.0`
 2. Check client logs for update errors
 3. Verify manifest format is correct
 4. Test with manual download
@@ -245,7 +245,7 @@ ssh bx.ee "doas systemctl restart gogrid-coordinator"
 The ball is rolling! GitHub Actions is building the artifacts right now. Once they're done:
 
 1. Download and test installers
-2. Deploy coordinator to bx.ee
+2. Deploy coordinator to your server
 3. Upload update packages
 4. Test auto-update
 5. Share with users!

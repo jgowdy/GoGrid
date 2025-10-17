@@ -2,7 +2,7 @@
 set -e
 
 # Configuration
-COORDINATOR_HOST="${COORDINATOR_HOST:-bx.ee}"
+COORDINATOR_HOST="${COORDINATOR_HOST:-coordinator.example.com}"
 COORDINATOR_PORT="${COORDINATOR_PORT:-8443}"
 VERSION="${1:-0.1.0}"
 
@@ -57,12 +57,13 @@ patch_and_package_macos() {
     # Sign the update package
     if [ -f ~/.tauri/gogrid.key ]; then
         echo "  Signing update package..."
-        cargo tauri signer sign "$output_name" --password "" --private-key ~/.tauri/gogrid.key
+        cargo tauri signer sign "$output_name" --password "" --private-key "$(cat ~/.tauri/gogrid.key)"
     else
         echo "  Warning: Signing key not found, skipping signature"
     fi
 
     # Move back to target directory
+    mkdir -p "$target_dir"
     mv "$output_name" "$target_dir/"
     if [ -f "$output_name.sig" ]; then
         mv "$output_name.sig" "$target_dir/"
@@ -119,7 +120,7 @@ patch_and_package_linux() {
     # Sign the update package
     if [ -f ~/.tauri/gogrid.key ]; then
         echo "  Signing update package..."
-        cargo tauri signer sign "$output_name" --password "" --private-key ~/.tauri/gogrid.key
+        cargo tauri signer sign "$output_name" --password "" --private-key "$(cat ~/.tauri/gogrid.key)"
     fi
 
     # Move back to target directory
@@ -136,23 +137,26 @@ patch_and_package_linux() {
     echo ""
 }
 
+# Get absolute path to project root
+PROJECT_ROOT=$(pwd)
+
 # Process macOS ARM64 build
 if [ -d "target/aarch64-apple-darwin/release/bundle/macos" ]; then
-    patch_and_package_macos "aarch64" "target/aarch64-apple-darwin/release/bundle/macos"
+    patch_and_package_macos "aarch64" "$PROJECT_ROOT/target/aarch64-apple-darwin/release/bundle/macos"
 else
     echo "→ Skipping macOS ARM64 (not built)"
 fi
 
 # Process macOS x86_64 build
 if [ -d "target/x86_64-apple-darwin/release/bundle/macos" ]; then
-    patch_and_package_macos "x64" "target/x86_64-apple-darwin/release/bundle/macos"
+    patch_and_package_macos "x64" "$PROJECT_ROOT/target/x86_64-apple-darwin/release/bundle/macos"
 else
     echo "→ Skipping macOS x86_64 (not built)"
 fi
 
 # Process Linux build
 if [ -d "target/release/bundle/appimage" ]; then
-    patch_and_package_linux "target/release/bundle/appimage"
+    patch_and_package_linux "$PROJECT_ROOT/target/release/bundle/appimage"
 else
     echo "→ Skipping Linux (not built)"
 fi

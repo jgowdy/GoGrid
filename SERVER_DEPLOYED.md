@@ -1,13 +1,12 @@
-# GoGrid Coordinator - DEPLOYED on bx.ee
+# GoGrid Coordinator - Server Deployment Guide
 
-**Date**: 2025-10-17
-**Status**: ✅ **LIVE AND RUNNING**
+**Note**: This is an example deployment guide. Adapt commands for your specific server.
 
 ---
 
 ## Deployment Summary
 
-The GoGrid coordinator service is now running on bx.ee and ready to accept worker connections!
+Guide for deploying the GoGrid coordinator service on your server.
 
 ### ✅ What's Deployed
 
@@ -23,10 +22,9 @@ The GoGrid coordinator service is now running on bx.ee and ready to accept worke
 ## Server Details
 
 ### Connection Information
-- **Host**: `bx.ee`
+- **Host**: Your server hostname
 - **Port**: `8443` (UDP for QUIC)
 - **Protocol**: QUIC with TLS
-- **Status**: ✅ **ACTIVE**
 
 ### File Locations
 ```
@@ -71,10 +69,9 @@ url = "redis://localhost:6379"
 
 ### Port Status
 ```bash
-$ nc -zv bx.ee 8443
-Connection to bx.ee port 8443 [tcp/pcsync-https] succeeded!
+$ nc -zv your-server.com 8443
+Connection to your-server.com port 8443 [tcp/pcsync-https] succeeded!
 ```
-✅ **Port is open and accepting connections**
 
 ### Service Status
 ```bash
@@ -99,28 +96,28 @@ udp dport 8443 accept comment "GoGrid QUIC"
 ### Start/Stop/Restart
 ```bash
 # Start
-ssh bx.ee "doas systemctl start gogrid-coordinator"
+ssh your-server.com "sudo systemctl start gogrid-coordinator"
 
 # Stop
-ssh bx.ee "doas systemctl stop gogrid-coordinator"
+ssh your-server.com "sudo systemctl stop gogrid-coordinator"
 
 # Restart
-ssh bx.ee "doas systemctl restart gogrid-coordinator"
+ssh your-server.com "sudo systemctl restart gogrid-coordinator"
 
 # Status
-ssh bx.ee "doas systemctl status gogrid-coordinator"
+ssh your-server.com "sudo systemctl status gogrid-coordinator"
 ```
 
 ### View Logs
 ```bash
 # Real-time logs
-ssh bx.ee "doas journalctl -u gogrid-coordinator -f"
+ssh your-server.com "sudo journalctl -u gogrid-coordinator -f"
 
 # Last 50 lines
-ssh bx.ee "doas journalctl -u gogrid-coordinator -n 50"
+ssh your-server.com "sudo journalctl -u gogrid-coordinator -n 50"
 
 # Today's logs
-ssh bx.ee "doas journalctl -u gogrid-coordinator --since today"
+ssh your-server.com "sudo journalctl -u gogrid-coordinator --since today"
 ```
 
 ### Update Binary
@@ -129,10 +126,10 @@ ssh bx.ee "doas journalctl -u gogrid-coordinator --since today"
 cargo build --package corpgrid-coordinator --release
 
 # Deploy
-scp target/release/gogrid-coordinator bx.ee:/opt/gogrid/bin/
+scp target/release/gogrid-coordinator your-server.com:/opt/gogrid/bin/
 
 # Restart service
-ssh bx.ee "doas systemctl restart gogrid-coordinator"
+ssh your-server.com "sudo systemctl restart gogrid-coordinator"
 ```
 
 ---
@@ -141,12 +138,12 @@ ssh bx.ee "doas systemctl restart gogrid-coordinator"
 
 ### 1. Client Development
 - [ ] Build Tauri system tray application
-- [ ] Implement QUIC client connection to bx.ee:8443
+- [ ] Implement QUIC client connection to coordinator server
 - [ ] Add phone-home protocol (heartbeats, registration)
 - [ ] Test end-to-end connection
 
 ### 2. Database Setup (Optional - Not Required Yet)
-- [ ] Install PostgreSQL on bx.ee
+- [ ] Install PostgreSQL on server
 - [ ] Create `gogrid` database
 - [ ] Run migrations
 - [ ] Install Redis for caching
@@ -170,7 +167,7 @@ Desktop Client (Windows/macOS/Linux)
     │
     │ QUIC/TLS (mTLS)
     ▼
-bx.ee:8443
+your-server.com:8443
     │
     ▼
 gogrid-coordinator (systemd)
@@ -188,13 +185,13 @@ gogrid-coordinator (systemd)
 
 ```bash
 # Using netcat
-nc -zv bx.ee 8443
+nc -zv your-server.com 8443
 
 # Using nmap (if installed)
-nmap -p 8443 bx.ee
+nmap -p 8443 your-server.com
 
 # Using telnet
-telnet bx.ee 8443
+telnet your-server.com 8443
 ```
 
 All should show **connection successful**!
@@ -224,22 +221,22 @@ All should show **connection successful**!
 ### Service Health
 ```bash
 # Check if running
-ssh bx.ee "pgrep -a gogrid"
+ssh your-server.com "pgrep -a gogrid"
 
 # Check port
-ssh bx.ee "ss -ulnp | grep 8443"
+ssh your-server.com "ss -ulnp | grep 8443"
 
 # Check connections
-ssh bx.ee "doas netstat -an | grep 8443"
+ssh your-server.com "sudo netstat -an | grep 8443"
 ```
 
 ### Resource Usage
 ```bash
 # Memory and CPU
-ssh bx.ee "ps aux | grep gogrid"
+ssh your-server.com "ps aux | grep gogrid"
 
 # Disk usage
-ssh bx.ee "du -sh /opt/gogrid/*"
+ssh your-server.com "du -sh /opt/gogrid/*"
 ```
 
 ---
@@ -249,35 +246,35 @@ ssh bx.ee "du -sh /opt/gogrid/*"
 ### Service Won't Start
 ```bash
 # Check logs
-ssh bx.ee "doas journalctl -u gogrid-coordinator -n 100"
+ssh your-server.com "sudo journalctl -u gogrid-coordinator -n 100"
 
 # Check binary
-ssh bx.ee "ls -lh /opt/gogrid/bin/gogrid-coordinator"
-ssh bx.ee "/opt/gogrid/bin/gogrid-coordinator --help"
+ssh your-server.com "ls -lh /opt/gogrid/bin/gogrid-coordinator"
+ssh your-server.com "/opt/gogrid/bin/gogrid-coordinator --help"
 
 # Check config
-ssh bx.ee "cat /opt/gogrid/config/coordinator.toml"
+ssh your-server.com "cat /opt/gogrid/config/coordinator.toml"
 ```
 
 ### Port Not Accessible
 ```bash
 # Check firewall
-ssh bx.ee "doas nft list ruleset | grep 8443"
+ssh your-server.com "sudo nft list ruleset | grep 8443"
 
 # Check if service is listening
-ssh bx.ee "doas ss -ulnp | grep 8443"
+ssh your-server.com "sudo ss -ulnp | grep 8443"
 
 # Test from server itself
-ssh bx.ee "nc -zv localhost 8443"
+ssh your-server.com "nc -zv localhost 8443"
 ```
 
 ### Update Firewall Rule
 ```bash
 # Remove old rule (if needed)
-ssh bx.ee "doas nft delete rule inet bx_firewall INPUT handle <handle>"
+ssh your-server.com "sudo nft delete rule inet filter INPUT handle <handle>"
 
 # Add new rule
-ssh bx.ee "doas nft add rule inet bx_firewall INPUT udp dport 8443 accept comment \"GoGrid QUIC\""
+ssh your-server.com "sudo nft add rule inet filter INPUT udp dport 8443 accept comment \"GoGrid QUIC\""
 ```
 
 ---
@@ -298,24 +295,15 @@ ssh bx.ee "doas nft add rule inet bx_firewall INPUT udp dport 8443 accept commen
 
 ---
 
-## Contact
-
-**Server**: bx.ee
-**Port**: 8443
-**Protocol**: QUIC/TLS
-**Status**: ✅ READY FOR CONNECTIONS
-
----
-
 ## Summary
 
-🎉 **GoGrid Coordinator is LIVE!**
+**GoGrid Coordinator Setup Guide**
 
-The server is ready to accept worker connections at **bx.ee:8443**.
+This guide helps you deploy the coordinator service on your server.
 
-Next step: Build the desktop client (Tauri tray app) that connects to this server!
+**Server Requirements**:
+- Port 8443 (UDP) open for QUIC
+- systemd-based Linux distribution
+- Rust toolchain for building
 
----
-
-**Deployed**: 2025-10-17
-**Status**: ✅ **PRODUCTION READY**
+Next step: Build the desktop client (Tauri tray app) that connects to your server!

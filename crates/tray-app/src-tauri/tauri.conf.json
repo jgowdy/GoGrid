@@ -24,7 +24,7 @@
   "plugins": {
     "updater": {
       "endpoints": [],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZCQjBCRUM2NkQ4NTdDREIKUldUYmZJVnR4cjZ3YTJ6Qnc5M0lodlJoY0h2V0REWWE0QnBqdUEzeW9Ca3liVHBwdXdEdEx5VWgK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDExREY1ODM3NEU3RjM3Q0UKUldUT04zOU9OMWpmRWJHeXZWU3JadXFxVzM5akxOMnBrV01kTklYSWg2L09YK1M4RjRGTWZBTDYK"
     }
   },
   "bundle": {

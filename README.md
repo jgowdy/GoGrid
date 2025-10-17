@@ -16,11 +16,9 @@ GoGrid Worker is a system tray application for running your own private distribu
 
 ## Download
 
-Get the latest version from our downloads page:
+Get the latest version from your coordinator server's downloads page:
 
-**[Download GoGrid Worker](https://example.com/downloads)**
-
-For the reference implementation, downloads are available at `https://bx.ee:8443/downloads`
+**[Download GoGrid Worker](https://your-server.com:8443/downloads)**
 
 ### Platform Support
 
@@ -116,7 +114,7 @@ Central server that manages the network:
 - **Coordinator** (`gogrid-coordinator`) - Connection management and job distribution
 - Serves auto-update manifests and installers
 - Handles worker registration and heartbeats
-- Example deployment: `bx.ee:8443`
+- Example deployment: `coordinator.example.com:8443`
 
 ### 3. Job Queue (Separate)
 
@@ -134,7 +132,7 @@ GoGrid Worker automatically checks for updates:
 - **Silent download** - No interruption to current work
 - **Smart restart** - Prompts only when convenient
 
-Example update server: `https://bx.ee:8443/updates/`
+Example update server: `https://your-server.com:8443/updates/`
 
 See [AUTO_UPDATE.md](AUTO_UPDATE.md) for technical details.
 
@@ -250,7 +248,7 @@ GoGrid is designed with security as a core principle for private infrastructure:
 
 ### Reporting Vulnerabilities
 
-Please report security vulnerabilities to: security@bx.ee
+Please report security vulnerabilities via GitHub Security Advisories.
 
 Do not open public issues for security concerns.
 
@@ -279,10 +277,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- **Documentation**: https://bx.ee/docs
-- **Dashboard**: https://bx.ee/dashboard
 - **Issues**: https://github.com/jgowdy/GoGrid/issues
-- **Email**: support@bx.ee
+- **Discussions**: https://github.com/jgowdy/GoGrid/discussions
 
 ## Acknowledgments
 
@@ -336,9 +332,9 @@ export GOGRID_COORDINATOR_PORT=8443
 export GOGRID_UPDATE_ENDPOINTS=https://your-server.com:8443/updates/{{target}}/{{current_version}}
 ```
 
-**Example using bx.ee**:
+**Example**:
 ```bash
-export GOGRID_COORDINATOR_HOST=bx.ee
+export GOGRID_COORDINATOR_HOST=coordinator.example.com
 export GOGRID_COORDINATOR_PORT=8443
 ```
 
@@ -395,7 +391,7 @@ pause_on_activity = true
 ### Update Server
 
 The update endpoints are configured in `tauri.conf.json` and via environment variables. Example configurations:
-- Example: `https://bx.ee:8443/updates/`
-- Example: `https://gogrid-updates.example.com/updates/`
+- Example: `https://coordinator.example.com:8443/updates/`
+- Example: `https://your-server.com:8443/updates/`
 
 To host your own update server, see [AUTO_UPDATE.md](AUTO_UPDATE.md).

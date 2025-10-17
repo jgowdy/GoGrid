@@ -6,7 +6,7 @@ set -e
 
 if [ "$#" -lt 3 ]; then
     echo "Usage: $0 <binary_path> <coordinator_host> <coordinator_port>"
-    echo "Example: $0 gogrid-tray bx.ee 8443"
+    echo "Example: $0 gogrid-tray coordinator.example.com 8443"
     exit 1
 fi
 

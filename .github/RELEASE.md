@@ -33,7 +33,7 @@ Every push to `main` or `develop` branches, and every pull request, will trigger
    - Build for Linux (x86_64)
    - Build for Windows (x86_64)
    - Create a GitHub Release with all artifacts
-   - Deploy to bx.ee update server
+   - Deploy to coordinator update server
 
 #### Option 2: Manual Workflow Dispatch
 
@@ -63,7 +63,7 @@ cd ../../../target/aarch64-apple-darwin/release/bundle/macos
 tar -czf "GoGrid_Worker_0.1.0_aarch64.app.tar.gz" "GoGrid Worker.app"
 ```
 
-### Linux (on bx.ee or Ubuntu)
+### Linux (on Ubuntu or Debian)
 
 ```bash
 # Install dependencies
@@ -113,39 +113,41 @@ tar -czf "GoGrid_Worker_0.1.0_x64-setup.nsis.zip" *.exe
 
 To enable automatic deployment, add the following GitHub secrets:
 
-1. `SSH_PRIVATE_KEY` - Private SSH key for deploying to bx.ee
+1. `SSH_PRIVATE_KEY` - Private SSH key for deploying to your coordinator server
    ```bash
    # Generate a deploy key
    ssh-keygen -t ed25519 -C "github-actions@gogrid" -f ~/.ssh/gogrid_deploy
 
-   # Add public key to bx.ee
-   ssh-copy-id -i ~/.ssh/gogrid_deploy.pub bx.ee
+   # Add public key to your coordinator server
+   ssh-copy-id -i ~/.ssh/gogrid_deploy.pub your-server.com
 
    # Add private key to GitHub Secrets
    cat ~/.ssh/gogrid_deploy
    ```
 
+2. `COORDINATOR_HOST` - Hostname of your coordinator server (e.g., `coordinator.example.com`)
+
 ### Manual Deployment
 
 ```bash
 # Upload macOS packages
-scp target/aarch64-apple-darwin/release/bundle/macos/GoGrid_Worker_*.app.tar.gz bx.ee:/opt/gogrid/updates/
-scp target/aarch64-apple-darwin/release/bundle/dmg/*.dmg bx.ee:/opt/gogrid/updates/
+scp target/aarch64-apple-darwin/release/bundle/macos/GoGrid_Worker_*.app.tar.gz your-server.com:/opt/gogrid/updates/
+scp target/aarch64-apple-darwin/release/bundle/dmg/*.dmg your-server.com:/opt/gogrid/updates/
 
 # Upload Linux packages
-scp target/release/bundle/appimage/GoGrid_Worker_*.AppImage.tar.gz bx.ee:/opt/gogrid/updates/
-scp target/release/bundle/appimage/*.AppImage bx.ee:/opt/gogrid/updates/
+scp target/release/bundle/appimage/GoGrid_Worker_*.AppImage.tar.gz your-server.com:/opt/gogrid/updates/
+scp target/release/bundle/appimage/*.AppImage your-server.com:/opt/gogrid/updates/
 
 # Upload Windows packages
-scp target/release/bundle/nsis/GoGrid_Worker_*.nsis.zip bx.ee:/opt/gogrid/updates/
-scp target/release/bundle/nsis/*.exe bx.ee:/opt/gogrid/updates/
+scp target/release/bundle/nsis/GoGrid_Worker_*.nsis.zip your-server.com:/opt/gogrid/updates/
+scp target/release/bundle/nsis/*.exe your-server.com:/opt/gogrid/updates/
 
 # Build and deploy coordinator
 cargo build --release --bin gogrid-coordinator
-scp target/release/gogrid-coordinator bx.ee:/opt/gogrid/bin/
+scp target/release/gogrid-coordinator your-server.com:/opt/gogrid/bin/
 
 # Restart coordinator
-ssh bx.ee "doas systemctl restart gogrid-coordinator"
+ssh your-server.com "sudo systemctl restart gogrid-coordinator"
 ```
 
 ## Artifacts Generated
@@ -192,10 +194,10 @@ ssh bx.ee "doas systemctl restart gogrid-coordinator"
 ### Server Logs
 ```bash
 # Coordinator logs
-ssh bx.ee "doas journalctl -u gogrid-coordinator -f"
+ssh your-server.com "sudo journalctl -u gogrid-coordinator -f"
 
-# Update requests
-ssh bx.ee "doas tail -f /var/log/nginx/access.log | grep /updates"
+# Update requests (if using nginx)
+ssh your-server.com "sudo tail -f /var/log/nginx/access.log | grep /updates"
 ```
 
 ### Update Statistics

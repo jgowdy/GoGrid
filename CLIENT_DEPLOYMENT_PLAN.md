@@ -1,8 +1,6 @@
 # GoGrid Desktop Client Deployment Plan
 
-**Date**: 2025-10-17
-**Server**: bx.ee
-**Status**: Design Phase
+**Status**: Design Phase - Example Implementation Guide
 
 ---
 
@@ -11,7 +9,7 @@
 Deploy GoGrid worker clients on Windows, macOS, and Linux with:
 1. **Easy Installation**: One-click installers for each platform
 2. **System Tray Application**: Minimal UI showing status
-3. **Phone Home**: Secure communication with bx.ee control server
+3. **Phone Home**: Secure communication with coordinator server
 4. **Auto-Updates**: Seamless updates without user intervention
 5. **Resource Management**: Automatic adaptive throttling
 
@@ -38,7 +36,7 @@ Deploy GoGrid worker clients on Windows, macOS, and Linux with:
                       │ Internet
                       │
 ┌─────────────────────▼────────────────────────────────────────┐
-│                    bx.ee (Control Server)                     │
+│              Coordinator Server (Control Server)              │
 │                                                               │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐         │
 │  │ Coordinator │  │  Job Queue  │  │  Metrics DB  │         │
@@ -329,7 +327,7 @@ WantedBy=default.target
 
 ## Phone Home Protocol
 
-### Communication with bx.ee
+### Communication with Coordinator Server
 
 **Protocol**: QUIC (Quinn) over TLS with mutual authentication (mTLS)
 
@@ -344,7 +342,7 @@ WantedBy=default.target
 ```
 1. Client starts up
 2. Loads client certificate (mTLS)
-3. Connects to bx.ee:8443 (QUIC)
+3. Connects to coordinator-server:8443 (QUIC)
 4. Sends registration message:
    {
      "type": "register",
@@ -432,7 +430,7 @@ WantedBy=default.target
      "model_update": {
        "action": "download",
        "model_id": "mistral-7b-v2",
-       "url": "https://bx.ee/models/..."
+       "url": "https://your-server.com/models/..."
      }
    }
    ```
@@ -450,7 +448,7 @@ WantedBy=default.target
 **Security**:
 - ✅ **TLS 1.3** for encryption
 - ✅ **mTLS** (mutual authentication with client certificates)
-- ✅ **Certificate pinning** (pin bx.ee server cert)
+- ✅ **Certificate pinning** (pin coordinator server cert)
 - ✅ **Token-based auth** (JWT for API calls)
 - ✅ **No sensitive data** stored on client
 
@@ -478,7 +476,7 @@ save_to_config_dir("client_signed.crt", &signed_cert)?;
 
 ---
 
-## Server Infrastructure on bx.ee
+## Server Infrastructure
 
 ### Components to Deploy
 
@@ -534,7 +532,7 @@ sudo nft add rule inet filter input \
   accept
 ```
 
-### Directory Structure on bx.ee
+### Directory Structure on Server
 
 ```
 /opt/gogrid/
@@ -601,7 +599,7 @@ WantedBy=multi-user.target
    {
      "type": "update_available",
      "version": "0.1.1",
-     "download_url": "https://bx.ee/updates/gogrid-0.1.1.delta",
+     "download_url": "https://your-server.com/updates/gogrid-0.1.1.delta",
      "signature": "...",
      "size_bytes": 2048576,
      "changelog": "Bug fixes and performance improvements"
@@ -806,7 +804,7 @@ echo "Check your system tray for the GoGrid icon."
 ```toml
 [server]
 # Control server address
-address = "bx.ee"
+address = "your-server.com"
 port = 8443
 protocol = "quic"  # or "tcp" for fallback
 
@@ -856,16 +854,16 @@ max_log_size_mb = 100
 
 ## Deployment Checklist
 
-### Phase 1: Server Setup on bx.ee
+### Phase 1: Server Setup
 
-- [ ] SSH to bx.ee
+- [ ] SSH to your server
 - [ ] Install PostgreSQL and Redis
 - [ ] Create `gogrid` user
 - [ ] Clone GoGrid repository
 - [ ] Build coordinator service
 - [ ] Create directory structure (`/opt/gogrid/`)
 - [ ] Generate TLS certificates (Let's Encrypt or self-signed)
-- [ ] Configure nftables (open port 8443)
+- [ ] Configure firewall (open port 8443)
 - [ ] Install systemd service
 - [ ] Start coordinator service
 - [ ] Test connection from local machine
@@ -895,8 +893,8 @@ max_log_size_mb = 100
 
 ## Next Steps
 
-1. **Set up bx.ee server infrastructure** (I can do this via SSH)
-2. **Open port 8443 on nftables**
+1. **Set up server infrastructure**
+2. **Open port 8443 on firewall**
 3. **Build coordinator service**
 4. **Prototype Tauri tray app**
 5. **Test phone-home connection**
@@ -904,15 +902,14 @@ max_log_size_mb = 100
 
 ---
 
-## Questions for You
+## Configuration Considerations
 
-1. **Port Number**: Is 8443 (QUIC/UDP) acceptable, or do you prefer a different port?
-2. **Domain**: Use `bx.ee` directly or a subdomain like `coord.bx.ee` or `workers.bx.ee`?
-3. **TLS Certificate**: Let's Encrypt (auto-renew) or self-signed for now?
-4. **Billing Model**: How should we calculate earnings? (per-token, per-job, per-hour?)
-5. **Beta Testing**: Ready for beta testers, or internal testing first?
+1. **Port Number**: Port 8443 (QUIC/UDP) is recommended
+2. **Domain**: Configure your server hostname in coordinator config
+3. **TLS Certificate**: Let's Encrypt (auto-renew) recommended for production
+4. **Billing Model**: Implement as needed (per-token, per-job, per-hour)
+5. **Testing**: Start with internal testing before beta release
 
 ---
 
-**Status**: Design Complete - Ready to Implement
-**Next Action**: Set up bx.ee server and open firewall port
+**Status**: Design Document - Adapt for Your Deployment

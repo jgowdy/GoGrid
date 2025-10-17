@@ -100,7 +100,7 @@ cargo build --release --bin corpgrid-scheduler
 
 ### 2. Build Coordinator (Server Binary)
 
-The coordinator runs on bx.ee and manages worker connections.
+The coordinator runs on your server and manages worker connections.
 
 ```bash
 cargo build --release --bin gogrid-coordinator

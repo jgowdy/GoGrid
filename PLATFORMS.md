@@ -134,16 +134,16 @@ Estimated download sizes and requirements:
 
 ### Update Server
 
-All installers and update packages are hosted on:
+All installers and update packages are hosted on your coordinator server:
 ```
-https://bx.ee:8443/downloads/
-https://bx.ee:8443/files/{package}
+https://your-server.com:8443/downloads/
+https://your-server.com:8443/files/{package}
 ```
 
 ### Update Manifest Endpoints
 
 ```
-GET https://bx.ee:8443/updates/{target}/{current_version}
+GET https://your-server.com:8443/updates/{target}/{current_version}
 ```
 
 Supported targets:

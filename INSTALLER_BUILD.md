@@ -10,24 +10,6 @@ The GoGrid Worker application consists of:
 
 Both are bundled together in platform-specific installers.
 
-## Completed Builds
-
-### macOS ✅
-
-**Location**: `/Users/jgowdy/GoGrid/target/release/bundle/dmg/`
-
-**Files Created**:
-- `GoGrid Worker_0.1.0_aarch64.dmg` (27 MB) - macOS disk image installer
-- `GoGrid Worker.app` - Application bundle containing:
-  - `gogrid-tray` (Tauri tray app)
-  - `corpgrid-scheduler` (Worker process)
-
-**Installation**:
-1. Open `GoGrid Worker_0.1.0_aarch64.dmg`
-2. Drag "GoGrid Worker" to Applications folder
-3. Launch from Applications or Spotlight
-4. App appears in menu bar (top right)
-
 **System Requirements**:
 - macOS 10.15 (Catalina) or later
 - Apple Silicon (ARM64) or Intel (x86_64)
@@ -183,7 +165,7 @@ Each installer contains:
 
 1. **Tray Application** (`gogrid-tray`):
    - System tray icon and menu
-   - Connection to coordinator at bx.ee:8443
+   - Connection to coordinator server
    - Worker process management
 
 2. **Worker Binary** (`corpgrid-scheduler`):

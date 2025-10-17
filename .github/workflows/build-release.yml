@@ -233,28 +233,28 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H bx.ee >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.COORDINATOR_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to update server
         run: |
           # Create updates directory
-          ssh bx.ee "doas mkdir -p /opt/gogrid/updates && doas chown jgowdy:jgowdy /opt/gogrid/updates"
+          ssh ${{ secrets.COORDINATOR_HOST }} "sudo mkdir -p /opt/gogrid/updates && sudo chown $USER:$USER /opt/gogrid/updates"
 
           # Upload all update packages
-          scp artifacts/**/*.tar.gz bx.ee:/opt/gogrid/updates/
-          scp artifacts/**/*.zip bx.ee:/opt/gogrid/updates/
+          scp artifacts/**/*.tar.gz ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/
+          scp artifacts/**/*.zip ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/
 
           # Upload installer files
-          scp artifacts/**/*.dmg bx.ee:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.AppImage bx.ee:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.exe bx.ee:/opt/gogrid/updates/ || true
+          scp artifacts/**/*.dmg ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
+          scp artifacts/**/*.AppImage ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
+          scp artifacts/**/*.exe ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
 
           # Build and deploy coordinator
           cargo build --release --bin gogrid-coordinator
-          scp target/release/gogrid-coordinator bx.ee:/opt/gogrid/bin/
+          scp target/release/gogrid-coordinator ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/bin/
 
           # Restart coordinator
-          ssh bx.ee "doas systemctl restart gogrid-coordinator"
+          ssh ${{ secrets.COORDINATOR_HOST }} "sudo systemctl restart gogrid-coordinator"
 
           echo "Deployment complete!"
-          echo "Downloads available at: https://bx.ee:8443/downloads"
+          echo "Downloads available at: https://${{ secrets.COORDINATOR_HOST }}:8443/downloads"

@@ -36,7 +36,7 @@ The script will:
 
 #### 1. Install Dependencies
 
-**OpenBSD** (like bx.ee):
+**OpenBSD**:
 ```bash
 doas pkg_add rust postgresql-server redis
 ```

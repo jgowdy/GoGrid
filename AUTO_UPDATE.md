@@ -10,9 +10,9 @@ The GoGrid Worker tray application includes automatic update functionality that 
 
 ```
 ┌─────────────┐         ┌──────────────┐         ┌─────────────┐
-│  Tray App   │────────>│   bx.ee:8443 │────────>│   Update    │
-│  (Client)   │  Check  │  Coordinator │ Manifest│   Package   │
-│             │<────────│    Server    │<────────│  (.tar.gz)  │
+│  Tray App   │────────>│ Coordinator  │────────>│   Update    │
+│  (Client)   │  Check  │    Server    │ Manifest│   Package   │
+│             │<────────│  :8443       │<────────│  (.tar.gz)  │
 └─────────────┘ Download└──────────────┘ Install └─────────────┘
 ```
 
@@ -24,7 +24,7 @@ The GoGrid Worker tray application includes automatic update functionality that 
    - Downloads and verifies update package
    - Installs and restarts automatically
 
-2. **Server Side** (bx.ee:8443):
+2. **Server Side** (Coordinator):
    - HTTP server on port 8443
    - Serves update manifests (JSON)
    - Serves update packages (.tar.gz, .zip)
@@ -40,7 +40,7 @@ The GoGrid Worker tray application includes automatic update functionality that 
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://bx.ee:8443/updates/{{target}}/{{current_version}}"
+        "https://your-server.com:8443/updates/{{target}}/{{current_version}}"
       ],
       "pubkey": ""
     }
@@ -82,7 +82,7 @@ Returns update manifest if newer version available:
 
 **Request:**
 ```
-GET https://bx.ee:8443/updates/darwin-aarch64/0.1.0
+GET https://your-server.com:8443/updates/darwin-aarch64/0.1.0
 ```
 
 **Response (200 OK):**
@@ -94,7 +94,7 @@ GET https://bx.ee:8443/updates/darwin-aarch64/0.1.0
   "platforms": {
     "darwin-aarch64": {
       "signature": "",
-      "url": "https://bx.ee:8443/downloads/GoGrid_Worker_0.1.1_aarch64.app.tar.gz"
+      "url": "https://your-server.com:8443/downloads/GoGrid_Worker_0.1.1_aarch64.app.tar.gz"
     }
   }
 }
@@ -143,17 +143,17 @@ Serves the actual update package.
 
 ```bash
 # Create updates directory
-ssh bx.ee "doas mkdir -p /opt/gogrid/updates && doas chown jgowdy:jgowdy /opt/gogrid/updates"
+ssh your-server.com "sudo mkdir -p /opt/gogrid/updates && sudo chown $USER:$USER /opt/gogrid/updates"
 
 # Upload update package
-scp target/release/bundle/macos/GoGrid_Worker_0.1.0_aarch64.app.tar.gz bx.ee:/opt/gogrid/updates/
+scp target/release/bundle/macos/GoGrid_Worker_0.1.0_aarch64.app.tar.gz your-server.com:/opt/gogrid/updates/
 
 # Rebuild coordinator
 cargo build --release --bin gogrid-coordinator
-scp target/release/gogrid-coordinator bx.ee:/opt/gogrid/bin/
+scp target/release/gogrid-coordinator your-server.com:/opt/gogrid/bin/
 
 # Restart coordinator
-ssh bx.ee "doas systemctl restart gogrid-coordinator"
+ssh your-server.com "sudo systemctl restart gogrid-coordinator"
 ```
 
 ### Update Manifest
@@ -192,7 +192,7 @@ For production, updates should be signed:
 
 Currently serving over HTTP. For production:
 
-1. Install Let's Encrypt certificate on bx.ee
+1. Install Let's Encrypt certificate on your server
 2. Configure HTTPS in coordinator
 3. Update endpoint URLs to use `https://`
 
@@ -258,10 +258,10 @@ If an update fails:
 
 ```bash
 # View coordinator logs
-ssh bx.ee "doas journalctl -u gogrid-coordinator -f"
+ssh your-server.com "sudo journalctl -u gogrid-coordinator -f"
 
-# Check update requests
-ssh bx.ee "doas tail -f /var/log/nginx/access.log | grep /updates"
+# Check update requests (if using nginx)
+ssh your-server.com "sudo tail -f /var/log/nginx/access.log | grep /updates"
 ```
 
 ### Client Logs
@@ -323,7 +323,7 @@ To release a new version:
 
 1. Check server is running:
    ```bash
-   curl -I https://bx.ee:8443/updates/darwin-aarch64/0.1.0
+   curl -I https://your-server.com:8443/updates/darwin-aarch64/0.1.0
    ```
 
 2. Check client logs for errors
