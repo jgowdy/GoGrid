@@ -137,20 +137,14 @@ fn main() {
                     Ok(cfg) => {
                         if !cfg.is_configured() {
                             // First run - prompt for configuration
-                            match Config::prompt_for_config().await {
-                                Ok(cfg) => cfg,
-                                Err(e) => {
-                                    eprintln!("Configuration error: {}", e);
-                                    return Err(e);
-                                }
-                            }
+                            Config::prompt_for_config().await
                         } else {
-                            cfg
+                            Ok(cfg)
                         }
                     }
                     Err(e) => {
                         eprintln!("Failed to load configuration: {}", e);
-                        return Err(e);
+                        Err(e)
                     }
                 }
             });
@@ -158,10 +152,10 @@ fn main() {
             let config = match config {
                 Ok(cfg) => cfg,
                 Err(e) => {
-                    // Show error and exit
-                    use tauri::api::dialog::blocking::MessageDialogBuilder;
-                    MessageDialogBuilder::new("Configuration Error", &format!("Failed to load configuration: {}\n\nThe application will now exit.", e))
-                        .show();
+                    // Log error and exit
+                    eprintln!("Configuration Error: {}", e);
+                    eprintln!("The application will now exit.");
+                    eprintln!("Please configure GoGrid Worker and try again.");
                     std::process::exit(1);
                 }
             };
@@ -233,7 +227,9 @@ fn main() {
                     }
                     "dashboard" => {
                         info!("Dashboard requested");
-                        let _ = app.shell().open("https://bx.ee/dashboard", None);
+                        // TODO: Get dashboard URL from config
+                        #[allow(deprecated)]
+                        let _ = app.shell().open("https://example.com/dashboard", None);
                     }
                     _ => {}
                 })

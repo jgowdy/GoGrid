@@ -18,7 +18,9 @@ GoGrid Worker is a system tray application for running your own private distribu
 
 Get the latest version from our downloads page:
 
-**[Download GoGrid Worker](https://bx.ee:8443/downloads)**
+**[Download GoGrid Worker](https://example.com/downloads)**
+
+For the reference implementation, downloads are available at `https://bx.ee:8443/downloads`
 
 ### Platform Support
 
@@ -114,7 +116,7 @@ Central server that manages the network:
 - **Coordinator** (`gogrid-coordinator`) - Connection management and job distribution
 - Serves auto-update manifests and installers
 - Handles worker registration and heartbeats
-- Runs on `bx.ee:8443`
+- Example deployment: `bx.ee:8443`
 
 ### 3. Job Queue (Separate)
 
@@ -132,15 +134,15 @@ GoGrid Worker automatically checks for updates:
 - **Silent download** - No interruption to current work
 - **Smart restart** - Prompts only when convenient
 
-Update server: `https://bx.ee:8443/updates/`
+Example update server: `https://bx.ee:8443/updates/`
 
 See [AUTO_UPDATE.md](AUTO_UPDATE.md) for technical details.
 
 ## Configuration
 
-### Default Settings
+### Configuration Files
 
-The worker connects to `bx.ee:8443` by default. Settings can be configured through the tray menu:
+Settings can be configured through the tray menu or via configuration files:
 
 - **Pause/Resume** - Stop accepting new jobs
 - **GPU Settings** - Limit VRAM usage
@@ -252,18 +254,24 @@ Please report security vulnerabilities to: security@bx.ee
 
 Do not open public issues for security concerns.
 
-### Planned Security Enhancements
+### Implemented Security Features
 
-- **Update Signing** - Cryptographic verification of updates
-  ```bash
-  # Will use Tauri's built-in signing
-  tauri signer generate -w ~/.tauri/gogrid.key
-  tauri signer sign update.tar.gz
-  ```
+- **Update Signing** ✅ - Cryptographic verification of updates using Minisign
+  - Self-signed keys stored in `~/.tauri/gogrid.key`
+  - Public key embedded in application for verification
+  - All updates verified before installation
+
+- **Job Sandboxing** ✅ - Process isolation for inference workloads
+  - macOS: `sandbox-exec` with custom security profiles
+  - Linux: Bubblewrap (bwrap) for container-like isolation
+  - Windows: Job Objects for resource limits
+  - Configurable resource limits (memory, CPU time, network access)
+
+### Planned Security Enhancements
 
 - **Certificate Pinning** - Pin coordinator TLS certificates
 - **Worker Authentication** - Optional API keys for worker registration
-- **Job Sandboxing** - Additional process isolation for inference workloads
+- **Enhanced Sandboxing** - Additional filesystem restrictions
 
 ## License
 
@@ -291,7 +299,7 @@ Built with:
 - [x] Windows support (x86_64)
 - [x] Auto-update system
 - [x] System tray interface
-- [ ] Code signing for updates
+- [x] Code signing for updates
 - [ ] GPU temperature monitoring
 - [ ] Advanced scheduling options
 - [ ] Multi-GPU support
@@ -315,11 +323,22 @@ Made with ❤️ by the GoGrid team
 
 ### Coordinator Endpoint
 
-By default, GoGrid Worker connects to `bx.ee:8443`. To use your own coordinator:
+GoGrid Worker requires coordinator configuration on first run. Configure via environment variables or configuration file.
 
-**Environment Variables**:
+**Required Configuration**:
+
+The worker must be configured with a coordinator server address. On first run, if environment variables are not set, you'll be prompted to configure.
+
+**Environment Variables** (recommended):
 ```bash
 export GOGRID_COORDINATOR_HOST=your-server.com
+export GOGRID_COORDINATOR_PORT=8443
+export GOGRID_UPDATE_ENDPOINTS=https://your-server.com:8443/updates/{{target}}/{{current_version}}
+```
+
+**Example using bx.ee**:
+```bash
+export GOGRID_COORDINATOR_HOST=bx.ee
 export GOGRID_COORDINATOR_PORT=8443
 ```
 
@@ -349,10 +368,34 @@ setx GOGRID_COORDINATOR_HOST your-server.com
 setx GOGRID_COORDINATOR_PORT 8443
 ```
 
+**Configuration File** (alternative):
+
+If environment variables are not set, the worker will create a configuration file at:
+- **macOS**: `~/Library/Application Support/GoGrid Worker/config.toml`
+- **Linux**: `~/.config/gogrid-worker/config.toml`
+- **Windows**: `%APPDATA%\GoGrid Worker\config.toml`
+
+Example `config.toml`:
+```toml
+[coordinator]
+host = "your-server.com"
+port = 8443
+
+[updates]
+enabled = true
+endpoints = ["https://your-server.com:8443/updates/{{target}}/{{current_version}}"]
+
+[worker]
+max_vram_gb = 8.0
+pause_on_activity = true
+```
+
+**Note**: Environment variables take precedence over configuration file settings.
+
 ### Update Server
 
-The update endpoints are configured in `tauri.conf.json`. By default:
-- Primary: `https://bx.ee:8443/updates/`
-- Fallback: `https://gogrid-updates.example.com/updates/`
+The update endpoints are configured in `tauri.conf.json` and via environment variables. Example configurations:
+- Example: `https://bx.ee:8443/updates/`
+- Example: `https://gogrid-updates.example.com/updates/`
 
 To host your own update server, see [AUTO_UPDATE.md](AUTO_UPDATE.md).

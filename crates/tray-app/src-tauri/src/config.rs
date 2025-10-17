@@ -138,16 +138,12 @@ impl Config {
 
     /// Prompt user for configuration via dialog
     pub async fn prompt_for_config() -> Result<Self> {
-        use tauri::api::dialog::blocking::MessageDialogBuilder;
-        use tauri::api::dialog::MessageDialogButtons;
+        info!("First run detected - configuration required");
 
-        // Show info dialog
-        MessageDialogBuilder::new(
-            "GoGrid Worker - First Run",
-            "Welcome to GoGrid Worker!\n\nYou need to configure your coordinator server address.\n\nThis can be:\n- Your own self-hosted coordinator\n- A coordinator URL provided to you\n\nYou can configure this now via environment variables or edit the config file later.",
-        )
-        .buttons(MessageDialogButtons::Ok)
-        .show();
+        // Log welcome message
+        info!("Welcome to GoGrid Worker!");
+        info!("You need to configure your coordinator server address.");
+        info!("This can be your own self-hosted coordinator or a coordinator URL provided to you.");
 
         // Check if environment variables are set
         if let (Ok(host), Ok(port_str)) = (
@@ -182,21 +178,13 @@ impl Config {
 
         // Show configuration instructions
         let config_path = Self::config_path()?;
-        MessageDialogBuilder::new(
-            "Configuration Required",
-            &format!(
-                "GoGrid Worker needs to be configured.\n\n\
-                Please set environment variables:\n\
-                GOGRID_COORDINATOR_HOST=your-server.com\n\
-                GOGRID_COORDINATOR_PORT=8443\n\n\
-                Or edit the configuration file:\n\
-                {}\n\n\
-                After configuring, restart GoGrid Worker.",
-                config_path.display()
-            ),
-        )
-        .buttons(MessageDialogButtons::Ok)
-        .show();
+        warn!("Configuration required!");
+        warn!("Please set environment variables:");
+        warn!("  GOGRID_COORDINATOR_HOST=your-server.com");
+        warn!("  GOGRID_COORDINATOR_PORT=8443");
+        warn!("Or edit the configuration file:");
+        warn!("  {}", config_path.display());
+        warn!("After configuring, restart GoGrid Worker.");
 
         // Create a template config file
         let mut config = Config::default();
