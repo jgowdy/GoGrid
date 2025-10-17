@@ -8,22 +8,18 @@ use tokio::sync::RwLock;
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
-// Default coordinator settings (can be overridden via environment variables or config)
-const DEFAULT_COORDINATOR_HOST: &str = "bx.ee";
-const DEFAULT_COORDINATOR_PORT: u16 = 8443;
+// Coordinator settings (must be configured via environment variables or config file)
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(30);
 const RECONNECT_INTERVAL: Duration = Duration::from_secs(10);
 
-fn get_coordinator_host() -> String {
-    std::env::var("GOGRID_COORDINATOR_HOST")
-        .unwrap_or_else(|_| DEFAULT_COORDINATOR_HOST.to_string())
+fn get_coordinator_host() -> Option<String> {
+    std::env::var("GOGRID_COORDINATOR_HOST").ok()
 }
 
-fn get_coordinator_port() -> u16 {
+fn get_coordinator_port() -> Option<u16> {
     std::env::var("GOGRID_COORDINATOR_PORT")
         .ok()
         .and_then(|p| p.parse().ok())
-        .unwrap_or(DEFAULT_COORDINATOR_PORT)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -102,8 +98,10 @@ impl CoordinatorClient {
     }
 
     pub async fn connect(&mut self) -> Result<()> {
-        let coordinator_host = get_coordinator_host();
-        let coordinator_port = get_coordinator_port();
+        let coordinator_host = get_coordinator_host()
+            .ok_or_else(|| anyhow::anyhow!("GOGRID_COORDINATOR_HOST environment variable not set"))?;
+        let coordinator_port = get_coordinator_port()
+            .ok_or_else(|| anyhow::anyhow!("GOGRID_COORDINATOR_PORT environment variable not set"))?;
         info!("Connecting to coordinator at {}:{}...", coordinator_host, coordinator_port);
 
         // Create QUIC client configuration with relaxed certificate verification

@@ -46,12 +46,24 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Packaging ARM64..."
     cd target/aarch64-apple-darwin/release/bundle/macos
     tar -czf "GoGrid_Worker_${VERSION}_aarch64.app.tar.gz" "GoGrid Worker.app"
+
+    # Sign update package
+    if [ -f ~/.tauri/gogrid.key ]; then
+        echo "Signing ARM64 update..."
+        cargo tauri signer sign "GoGrid_Worker_${VERSION}_aarch64.app.tar.gz" --password "" --private-key ~/.tauri/gogrid.key
+    fi
     cd ../../../../..
 
     # Package for updates (x86_64)
     echo "Packaging x86_64..."
     cd target/x86_64-apple-darwin/release/bundle/macos
     tar -czf "GoGrid_Worker_${VERSION}_x64.app.tar.gz" "GoGrid Worker.app"
+
+    # Sign update package
+    if [ -f ~/.tauri/gogrid.key ]; then
+        echo "Signing x86_64 update..."
+        cargo tauri signer sign "GoGrid_Worker_${VERSION}_x64.app.tar.gz" --password "" --private-key ~/.tauri/gogrid.key
+    fi
     cd ../../../../..
 
     echo -e "${GREEN}✓ macOS builds complete!${NC}"
@@ -100,6 +112,12 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     echo "Packaging..."
     cd target/release/bundle/appimage
     tar -czf "GoGrid_Worker_${VERSION}_amd64.AppImage.tar.gz" *.AppImage
+
+    # Sign update package
+    if [ -f ~/.tauri/gogrid.key ]; then
+        echo "Signing update..."
+        cargo tauri signer sign "GoGrid_Worker_${VERSION}_amd64.AppImage.tar.gz" --password "" --private-key ~/.tauri/gogrid.key
+    fi
     cd ../../../..
 
     echo -e "${GREEN}✓ Linux build complete!${NC}"
@@ -131,6 +149,12 @@ elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
     echo "Packaging..."
     cd target\release\bundle\nsis
     tar -czf "GoGrid_Worker_${VERSION}_x64-setup.nsis.zip" *.exe
+
+    # Sign update package
+    if [ -f ~/.tauri/gogrid.key ]; then
+        echo "Signing update..."
+        cargo tauri signer sign "GoGrid_Worker_${VERSION}_x64-setup.nsis.zip" --password "" --private-key ~/.tauri/gogrid.key
+    fi
     cd ..\..\..\..
 
     echo -e "${GREEN}✓ Windows build complete!${NC}"
