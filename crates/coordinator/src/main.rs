@@ -3,6 +3,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use quinn::{Endpoint, ServerConfig};
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -32,6 +33,25 @@ struct Args {
 
     #[arg(long, default_value = "8443")]
     port: u16,
+}
+
+#[derive(Debug, Deserialize)]
+struct Config {
+    server: ServerOptions,
+    #[serde(default)]
+    tls: Option<TlsConfig>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ServerOptions {
+    bind_addr: String,
+    port: u16,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct TlsConfig {
+    cert_path: PathBuf,
+    key_path: PathBuf,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,7 +113,25 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
 
-    info!("GoGrid Coordinator starting on {}:{}...", args.bind_addr, args.port);
+    // Load config from file if it exists
+    let config: Option<Config> = if args.config.exists() {
+        let config_str = fs::read_to_string(&args.config)
+            .context("Failed to read config file")?;
+        Some(toml::from_str(&config_str)
+            .context("Failed to parse config file")?)
+    } else {
+        None
+    };
+
+    // Use config values or fall back to command line args
+    let bind_addr = config.as_ref()
+        .map(|c| c.server.bind_addr.clone())
+        .unwrap_or(args.bind_addr);
+    let port = config.as_ref()
+        .map(|c| c.server.port)
+        .unwrap_or(args.port);
+
+    info!("GoGrid Coordinator starting on {}:{}...", bind_addr, port);
 
     // Create worker registry
     let registry = Arc::new(RwLock::new(WorkerRegistry::new()));
@@ -125,10 +163,10 @@ async fn main() -> Result<()> {
     transport.max_idle_timeout(Some(std::time::Duration::from_secs(60).try_into().unwrap()));
     server_config.transport_config(Arc::new(transport));
 
-    // Bind to address
-    let bind_addr: IpAddr = args.bind_addr.parse()
+    // Bind to address for QUIC
+    let quic_bind_addr: IpAddr = bind_addr.parse()
         .context("Invalid bind address")?;
-    let socket_addr = SocketAddr::new(bind_addr, args.port);
+    let socket_addr = SocketAddr::new(quic_bind_addr, port);
 
     let endpoint = Endpoint::server(server_config, socket_addr)
         .context("Failed to create QUIC endpoint")?;
@@ -136,18 +174,39 @@ async fn main() -> Result<()> {
     info!("Listening on {}", socket_addr);
     info!("Ready to accept worker connections");
 
-    // Start HTTP server for updates on port 8443 (HTTPS)
+    // Start HTTP(S) server for updates
     let http_app = create_update_server();
-    let http_addr = SocketAddr::new(bind_addr, args.port);
+    let http_addr = SocketAddr::new(quic_bind_addr, port);
+    let tls_config = config.as_ref().and_then(|c| c.tls.clone());
 
     tokio::spawn(async move {
-        info!("Starting HTTP server on {} for updates", http_addr);
-        // Note: In production, this should use HTTPS with proper certificates
-        if let Err(e) = axum::serve(
-            tokio::net::TcpListener::bind(http_addr).await.unwrap(),
-            http_app
-        ).await {
-            error!("HTTP server error: {}", e);
+        if let Some(tls) = tls_config {
+            // Use HTTPS with TLS certificates
+            info!("Starting HTTPS server on {} for updates", http_addr);
+
+            let tls_config = match load_tls_config(&tls.cert_path, &tls.key_path).await {
+                Ok(config) => config,
+                Err(e) => {
+                    error!("Failed to load TLS certificates: {}", e);
+                    return;
+                }
+            };
+
+            if let Err(e) = axum_server::bind_rustls(http_addr, tls_config)
+                .serve(http_app.into_make_service())
+                .await
+            {
+                error!("HTTPS server error: {}", e);
+            }
+        } else {
+            // Fallback to HTTP (insecure)
+            info!("Starting HTTP server on {} for updates (WARNING: not using TLS)", http_addr);
+            if let Err(e) = axum::serve(
+                tokio::net::TcpListener::bind(http_addr).await.unwrap(),
+                http_app
+            ).await {
+                error!("HTTP server error: {}", e);
+            }
         }
     });
 
@@ -257,6 +316,12 @@ async fn handle_message(
             None
         }
     }
+}
+
+async fn load_tls_config(cert_path: &PathBuf, key_path: &PathBuf) -> Result<axum_server::tls_rustls::RustlsConfig> {
+    axum_server::tls_rustls::RustlsConfig::from_pem_file(cert_path, key_path)
+        .await
+        .context("Failed to load TLS certificates")
 }
 
 fn create_update_server() -> Router {
@@ -463,7 +528,7 @@ async fn downloads_page() -> Html<String> {
             <p>
                 <strong>What is GoGrid Worker?</strong><br>
                 GoGrid Worker is a system tray application that allows you to contribute your idle GPU
-                to the GoGrid distributed inference network. Earn rewards while your computer is idle.
+                to a GoGrid distributed inference network while your computer is idle.
             </p>
             <p style="margin-top: 1rem;">
                 <a href="https://github.com/gogrid" style="color: #00d9ff; text-decoration: none;">

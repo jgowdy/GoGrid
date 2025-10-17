@@ -24,6 +24,7 @@ quinn = { workspace = true }
 rustls = { workspace = true }
 tonic = { workspace = true }
 axum = "0.7"
+axum-server = { version = "0.6", features = ["tls-rustls"] }
 tower-http = { version = "0.5", features = ["fs"] }
 
 # Database
