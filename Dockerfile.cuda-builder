@@ -1,0 +1,21 @@
+# CUDA-enabled builder for GoGrid scheduler
+FROM nvidia/cuda:12.2.0-devel-ubuntu22.04
+
+# Install Rust and build dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust nightly
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Set working directory
+WORKDIR /build
+
+# This will be the build script
+CMD ["bash", "-c", "cargo build --release --package corpgrid-scheduler && cp target/release/corpgrid-scheduler /output/"]

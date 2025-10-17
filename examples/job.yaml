@@ -1,0 +1,46 @@
+# Example CorpGrid job specification
+# This file defines resource requirements, redundancy, and execution parameters
+
+resources:
+  # Number of GPUs required
+  gpu: 1
+
+  # Accepted GPU backends (can specify multiple for flexibility)
+  backend: ["cuda", "metal"]
+
+  # Minimum VRAM in GB
+  vram_gb_min: 8
+
+  # Optional CPU and memory requirements
+  # cpu_cores: 4
+  # memory_gb: 16
+
+redundancy:
+  # How many devices should execute this job simultaneously
+  replication_factor: 2
+
+  # How many matching results required to accept (typically equal to replication_factor)
+  quorum: 2
+
+timeouts:
+  # How often agent sends heartbeats (milliseconds)
+  heartbeat_period_ms: 5000
+
+  # How many missed heartbeats before lease expires
+  heartbeat_grace_missed: 3
+
+  # Maximum total execution time (seconds)
+  execution_timeout_s: 3600
+
+checkpointing:
+  # Enable automatic checkpointing for resumability
+  enabled: true
+
+  # Checkpoint interval (seconds)
+  interval_s: 60
+
+# Optional labels for job categorization
+# labels:
+#   queue: "high-priority"
+#   project: "ml-training"
+#   cost-center: "research"

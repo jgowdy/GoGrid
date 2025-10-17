@@ -1,0 +1,141 @@
+[package]
+name = "corpgrid-scheduler"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[features]
+default = []
+# Enable CUDA support (requires CUDA toolkit - build on Linux/Windows with NVIDIA GPUs)
+cuda = []
+# Enable Flash Attention v2 for faster long-context inference (CUDA only)
+flash-attention = []
+# Enable quantization support for memory-efficient inference
+quantization = []
+# Enable GGUF/llama.cpp quantization format support (uses native candle-core)
+quantization-gguf = ["quantization"]
+# Enable GPTQ 4-bit quantization support (requires additional dependencies)
+quantization-gptq = ["quantization"]
+# Enable AWQ 4-bit quantization support (requires additional dependencies)
+quantization-awq = ["quantization"]
+
+[[bin]]
+name = "corpgrid-scheduler"
+path = "src/main.rs"
+
+[[example]]
+name = "test_pipeline"
+path = "examples/test_pipeline.rs"
+
+[[example]]
+name = "benchmark_metal_optimizations"
+path = "examples/benchmark_metal_optimizations.rs"
+
+[[example]]
+name = "test_batch_inference"
+path = "examples/test_batch_inference.rs"
+
+[[example]]
+name = "test_streaming_inference"
+path = "examples/test_streaming_inference.rs"
+
+[[example]]
+name = "profile_pipeline"
+path = "examples/profile_pipeline.rs"
+
+[[example]]
+name = "stress_test_memory"
+path = "examples/stress_test_memory.rs"
+
+[[example]]
+name = "compare_pipeline_configurations"
+path = "examples/compare_pipeline_configurations.rs"
+
+[[example]]
+name = "test_quantized_inference"
+path = "examples/test_quantized_inference.rs"
+
+[[example]]
+name = "benchmark_quantization"
+path = "examples/benchmark_quantization.rs"
+
+[[example]]
+name = "test_resource_limiting"
+path = "examples/test_resource_limiting.rs"
+
+[dependencies]
+corpgrid-common = { path = "../common" }
+corpgrid-proto = { path = "../proto" }
+
+# Async
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+async-trait = "0.1"
+async-stream = "0.3"
+futures = "0.3"
+
+# Networking
+quinn = { workspace = true }
+rustls = { workspace = true }
+tonic = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+
+# Object storage
+aws-sdk-s3 = { workspace = true }
+aws-config = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Metrics
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+opentelemetry = { workspace = true }
+prometheus-client = { workspace = true }
+
+# HTTP server for metrics
+axum = "0.7"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace"] }
+
+# Utilities
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+rand = { workspace = true }
+bytes = { workspace = true }
+hex = "0.4"
+tokenizers = "0.20"
+sha2 = "0.10"
+ed25519-dalek = "2.1"
+bcrypt = "0.15"
+safetensors = "0.4"
+memmap2 = "0.9"
+clap = { version = "4.5", features = ["derive"] }
+num_cpus = "1.16"
+
+# Platform-specific GPU backends
+# macOS: Metal support only
+[target.'cfg(target_os = "macos")'.dependencies]
+mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git", features = ["metal"], default-features = false }
+candle-core = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["metal"] }
+candle-nn = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["metal"] }
+
+# Linux: CUDA support only
+[target.'cfg(target_os = "linux")'.dependencies]
+mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git", features = ["cuda"], default-features = false }
+candle-core = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["cuda"] }
+candle-nn = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["cuda"] }
+candle-flash-attn = { version = "0.9", optional = true }
+
+# Windows: CUDA support only
+[target.'cfg(target_os = "windows")'.dependencies]
+mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git", features = ["cuda"], default-features = false }
+candle-core = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["cuda"] }
+candle-nn = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["cuda"] }
+candle-flash-attn = { version = "0.9", optional = true }

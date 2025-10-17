@@ -1,0 +1,34 @@
+# Example LLM inference job for 120B model
+# Resources are auto-determined by the scheduler based on model requirements
+# The scheduler will allocate optimal GPU count and VRAM across CUDA/Metal devices
+
+job_type: llm_inference
+
+# No manual resource specification needed!
+# The scheduler automatically:
+# - Downloads model metadata
+# - Calculates VRAM requirements
+# - Finds optimal GPU allocation (can span CUDA + Metal)
+# - Rejects if insufficient resources available
+
+redundancy:
+  replication_factor: 1  # No redundancy for LLM inference (deterministic)
+  quorum: 1
+
+timeouts:
+  heartbeat_period_ms: 10000  # Longer for LLM workloads
+  heartbeat_grace_missed: 5
+  execution_timeout_s: 7200   # 2 hours for large batches
+
+checkpointing:
+  enabled: false  # LLM inference is stateless
+
+# Model configuration
+labels:
+  model_id: "meta-llama/Llama-2-120b-hf"  # HuggingFace model ID
+  model_path: "/path/to/cached/model"  # Or download from Hub
+  precision: "fp16"     # fp32, fp16, bf16, int8, int4 (defaults to fp16)
+  max_new_tokens: "512"
+  temperature: "0.7"
+  top_p: "0.9"
+  batch_size: "1"

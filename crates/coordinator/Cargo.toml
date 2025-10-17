@@ -1,0 +1,52 @@
+[package]
+name = "corpgrid-coordinator"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "gogrid-coordinator"
+path = "src/main.rs"
+
+[dependencies]
+corpgrid-common = { path = "../common" }
+corpgrid-proto = { path = "../proto" }
+
+# Async runtime
+tokio = { workspace = true, features = ["full"] }
+tokio-util = { workspace = true }
+async-trait = "0.1"
+futures = "0.3"
+
+# Networking
+quinn = { workspace = true }
+rustls = { workspace = true }
+tonic = { workspace = true }
+axum = "0.7"
+tower-http = { version = "0.5", features = ["fs"] }
+
+# Database
+sqlx = { workspace = true, features = ["postgres", "runtime-tokio-rustls", "macros", "migrate"] }
+redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = "0.8"
+bincode = "1.3"
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
+
+# Utilities
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"] }
+clap = { version = "4.5", features = ["derive"] }
+
+# TLS certificates
+rcgen = "0.12"
+rustls-pemfile = "2.0"

@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package corpgrid.scheduler;
+
+// Scheduler service for agents to poll for work and submit heartbeats
+service Scheduler {
+  // Agent registers and gets assigned work
+  rpc RegisterAgent(RegisterAgentRequest) returns (RegisterAgentResponse);
+
+  // Agent polls for new jobs
+  rpc PollJobs(PollJobsRequest) returns (PollJobsResponse);
+
+  // Agent sends heartbeat for active job
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+
+  // Agent submits job result
+  rpc SubmitResult(SubmitResultRequest) returns (SubmitResultResponse);
+
+  // Agent reports checkpoint
+  rpc ReportCheckpoint(ReportCheckpointRequest) returns (ReportCheckpointResponse);
+}
+
+// Model hosting service for LLM inference (server-side)
+service ModelHosting {
+  // Load a model with automatic resource allocation
+  rpc LoadModel(LoadModelRequest) returns (LoadModelResponse);
+
+  // Unload a model and free resources
+  rpc UnloadModel(UnloadModelRequest) returns (UnloadModelResponse);
+
+  // Submit inference request to loaded model
+  rpc Infer(InferRequest) returns (InferResponse);
+
+  // Get status of all loaded models
+  rpc GetModelStatus(GetModelStatusRequest) returns (GetModelStatusResponse);
+
+  // Get cluster resource availability
+  rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
+}
+
+message RegisterAgentRequest {
+  string device_id = 1;
+  DeviceInfo device_info = 2;
+  PowerStatus power_status = 3;
+  bytes public_key = 4; // Ed25519 public key (32 bytes)
+}
+
+message RegisterAgentResponse {
+  bool accepted = 1;
+  string message = 2;
+}
+
+message PollJobsRequest {
+  string device_id = 1;
+  DeviceCapabilities capabilities = 2;
+  PowerStatus power_status = 3;
+}
+
+message PollJobsResponse {
+  repeated JobAssignment assignments = 1;
+}
+
+message HeartbeatRequest {
+  string device_id = 1;
+  string job_id = 2;
+  string shard_id = 3;
+  uint64 timestamp_ms = 4;
+  JobProgress progress = 5;
+  PowerStatus power_status = 6;
+}
+
+message HeartbeatResponse {
+  bool ack = 1;
+  bool should_continue = 2;
+  string message = 3;
+}
+
+message SubmitResultRequest {
+  string device_id = 1;
+  string job_id = 2;
+  string shard_id = 3;
+  bytes result_hash = 4;
+  string result_s3_key = 5;
+  bytes signature = 6;
+  uint64 timestamp_ms = 7;
+}
+
+message SubmitResultResponse {
+  bool accepted = 1;
+  bool quorum_reached = 2;
+  string message = 3;
+}
+
+message ReportCheckpointRequest {
+  string device_id = 1;
+  string job_id = 2;
+  string shard_id = 3;
+  string checkpoint_s3_key = 4;
+  bytes checkpoint_hash = 5;
+  uint64 timestamp_ms = 6;
+}
+
+message ReportCheckpointResponse {
+  bool ack = 1;
+}
+
+message DeviceInfo {
+  string hostname = 1;
+  string os = 2;
+  string arch = 3;
+  repeated GpuInfo gpus = 4;
+  uint64 memory_bytes = 5;
+  uint32 cpu_cores = 6;
+}
+
+message GpuInfo {
+  string name = 1;
+  string backend = 2; // "cuda" or "metal"
+  uint64 vram_bytes = 3;
+  string driver_version = 4;
+  string compute_capability = 5;
+}
+
+message DeviceCapabilities {
+  repeated string backends = 1; // ["cuda", "metal"]
+  uint64 max_vram_bytes = 2;
+  repeated string supported_features = 3;
+}
+
+message PowerStatus {
+  bool on_ac_power = 1;
+  uint32 battery_percent = 2;
+}
+
+message JobAssignment {
+  string job_id = 1;
+  string shard_id = 2;
+  string bundle_s3_key = 3;
+  bytes bundle_hash = 4;
+  bytes bundle_signature = 5;
+  JobSpec spec = 6;
+  string checkpoint_s3_key = 7; // Optional, for resume
+  uint64 lease_expires_ms = 8;
+}
+
+message JobSpec {
+  string backend = 1;
+  uint64 vram_gb_min = 2;
+  uint32 heartbeat_period_ms = 3;
+  uint32 heartbeat_grace_missed = 4;
+  bool checkpointing_enabled = 5;
+  uint32 checkpoint_interval_s = 6;
+}
+
+message JobProgress {
+  double percent_complete = 1;
+  uint64 processed_items = 2;
+  uint64 total_items = 3;
+}
+
+// Model Hosting Service Messages
+
+message LoadModelRequest {
+  string model_path = 1;           // Path to model directory or HuggingFace ID
+  string precision = 2;             // "fp32", "fp16", "bf16", "int8", "int4"
+  bool download_from_hub = 3;       // If true, download from HuggingFace Hub
+  string hub_revision = 4;          // Optional: specific revision/branch
+}
+
+message LoadModelResponse {
+  bool success = 1;
+  string model_id = 2;              // UUID for loaded model
+  string error_message = 3;
+  ModelAllocationInfo allocation = 4;
+}
+
+message ModelAllocationInfo {
+  uint32 num_devices = 1;
+  repeated string device_names = 2;
+  repeated string device_backends = 3;  // "cuda" or "metal"
+  uint64 total_vram_gb = 4;
+  string backend_type = 5;              // "homogeneous_cuda", "homogeneous_metal", "heterogeneous_pipeline"
+}
+
+message UnloadModelRequest {
+  string model_id = 1;
+}
+
+message UnloadModelResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message InferRequest {
+  string model_id = 1;
+  repeated uint32 input_tokens = 2;
+  uint32 max_new_tokens = 3;
+  float temperature = 4;
+  float top_p = 5;
+}
+
+message InferResponse {
+  bool success = 1;
+  repeated uint32 output_tokens = 2;
+  string error_message = 3;
+  uint64 generation_time_ms = 4;
+}
+
+message GetModelStatusRequest {
+  // Empty - returns status of all models
+}
+
+message GetModelStatusResponse {
+  repeated ModelStatus models = 1;
+  ClusterResourceInfo cluster_resources = 2;
+}
+
+message ModelStatus {
+  string model_id = 1;
+  string model_name = 2;
+  uint64 num_parameters_b = 3;
+  repeated string devices = 4;
+  string backend_type = 5;
+  uint64 requests_served = 6;
+}
+
+message GetClusterStatusRequest {
+  // Empty
+}
+
+message GetClusterStatusResponse {
+  ClusterResourceInfo resources = 1;
+}
+
+message ClusterResourceInfo {
+  uint32 total_gpus = 1;
+  uint32 free_gpus = 2;
+  uint64 total_vram_gb = 3;
+  uint64 free_vram_gb = 4;
+  uint32 cuda_gpus = 5;
+  uint32 metal_gpus = 6;
+}

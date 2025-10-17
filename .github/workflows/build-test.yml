@@ -1,0 +1,107 @@
+name: Build Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-macos:
+    name: Test macOS Build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        run: cargo test --workspace
+
+      - name: Build scheduler
+        run: cargo build --release --bin corpgrid-scheduler
+
+      - name: Build coordinator
+        run: cargo build --release --bin gogrid-coordinator
+
+      - name: Build tray app
+        run: |
+          cargo install tauri-cli --version '^2.0.0'
+          cd crates/tray-app/src-tauri
+          cargo tauri build
+
+  test-linux:
+    name: Test Linux Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        run: cargo test --workspace
+
+      - name: Build scheduler
+        run: cargo build --release --bin corpgrid-scheduler
+
+      - name: Build coordinator
+        run: cargo build --release --bin gogrid-coordinator
+
+      - name: Build tray app
+        run: |
+          cargo install tauri-cli --version '^2.0.0'
+          cd crates/tray-app/src-tauri
+          cargo tauri build
+
+  test-windows:
+    name: Test Windows Build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        run: cargo test --workspace
+
+      - name: Build scheduler
+        run: cargo build --release --bin corpgrid-scheduler
+
+      - name: Build coordinator
+        run: cargo build --release --bin gogrid-coordinator
+
+      - name: Build tray app
+        run: |
+          cargo install tauri-cli --version '^2.0.0'
+          cd crates/tray-app/src-tauri
+          cargo tauri build

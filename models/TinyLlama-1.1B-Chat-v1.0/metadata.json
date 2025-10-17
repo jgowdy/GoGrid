@@ -1,0 +1,10 @@
+{
+  "name": "TinyLlama-1.1B-Chat",
+  "organization": "TinyLlama",
+  "description": "TinyLlama 1.1B Chat model for testing mistral.rs",
+  "license": "Apache-2.0",
+  "source_url": "https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "architecture": "llama",
+  "modality": "text",
+  "parameters": 1100000000
+}

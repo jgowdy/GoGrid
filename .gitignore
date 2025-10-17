@@ -1,0 +1,78 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Tauri
+crates/tray-app/src-tauri/target/
+crates/tray-app/dist/
+crates/tray-app/node_modules/
+
+# Build artifacts
+*.dmg
+*.app
+*.AppImage
+*.deb
+*.rpm
+*.exe
+*.msi
+*.zip
+*.tar.gz
+!.github/**/*.tar.gz
+
+# Logs
+*.log
+logs/
+
+# Secrets
+*.key
+*.pem
+*.p12
+.env
+.env.local
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Thumbnails
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Testing
+.test/
+test-results/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+tmp/
+temp/
+
+# Large model files
+models/*/model.safetensors
+models/*/pytorch_model.bin
+*.safetensors
+*.bin
+

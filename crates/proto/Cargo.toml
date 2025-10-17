@@ -1,0 +1,15 @@
+[package]
+name = "corpgrid-proto"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+tonic = { workspace = true }
+prost = { workspace = true }
+serde = { workspace = true }
+bytes = { workspace = true }
+
+[build-dependencies]
+tonic-build = { workspace = true }
