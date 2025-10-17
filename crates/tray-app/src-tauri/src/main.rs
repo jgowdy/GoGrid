@@ -15,9 +15,11 @@ use tokio::sync::RwLock;
 use tracing::{info, warn};
 use uuid::Uuid;
 
+mod config;
 mod coordinator_client;
 mod worker_process;
 
+use config::Config;
 use coordinator_client::CoordinatorClient;
 use worker_process::WorkerProcess;
 
@@ -26,6 +28,7 @@ struct AppState {
     worker_status: Arc<RwLock<WorkerStatus>>,
     coordinator_client: Arc<RwLock<Option<CoordinatorClient>>>,
     worker_process: Arc<WorkerProcess>,
+    config: Arc<RwLock<Config>>,
 }
 
 impl Default for AppState {
@@ -54,6 +57,7 @@ impl Default for AppState {
             worker_status: Arc::new(RwLock::new(WorkerStatus::default())),
             coordinator_client: Arc::new(RwLock::new(None)),
             worker_process: Arc::new(WorkerProcess::new(worker_binary.to_string())),
+            config: Arc::new(RwLock::new(Config::default())),
         }
     }
 }
@@ -126,6 +130,47 @@ fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState::default())
         .setup(|app| {
+            // Load configuration
+            let state: State<AppState> = app.state();
+            let config = tauri::async_runtime::block_on(async {
+                match Config::load() {
+                    Ok(cfg) => {
+                        if !cfg.is_configured() {
+                            // First run - prompt for configuration
+                            match Config::prompt_for_config().await {
+                                Ok(cfg) => cfg,
+                                Err(e) => {
+                                    eprintln!("Configuration error: {}", e);
+                                    return Err(e);
+                                }
+                            }
+                        } else {
+                            cfg
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to load configuration: {}", e);
+                        return Err(e);
+                    }
+                }
+            });
+
+            let config = match config {
+                Ok(cfg) => cfg,
+                Err(e) => {
+                    // Show error and exit
+                    use tauri::api::dialog::blocking::MessageDialogBuilder;
+                    MessageDialogBuilder::new("Configuration Error", &format!("Failed to load configuration: {}\n\nThe application will now exit.", e))
+                        .show();
+                    std::process::exit(1);
+                }
+            };
+
+            // Store config in state
+            tauri::async_runtime::block_on(async {
+                *state.config.write().await = config;
+            });
+
             // Create system tray
             let quit = MenuItemBuilder::with_id("quit", "Quit GoGrid").build(app)?;
             let pause = MenuItemBuilder::with_id("pause", "Pause Worker").build(app)?;
@@ -218,9 +263,15 @@ fn main() {
 }
 
 async fn connect_to_coordinator(app: tauri::AppHandle) {
-    info!("Connecting to coordinator at bx.ee:8443...");
-
     let state: State<AppState> = app.state();
+
+    // Get coordinator config
+    let (host, port) = {
+        let config = state.config.read().await;
+        (config.coordinator.host.clone(), config.coordinator.port)
+    };
+
+    info!("Connecting to coordinator at {}:{}...", host, port);
 
     // Update status
     {
@@ -234,7 +285,7 @@ async fn connect_to_coordinator(app: tauri::AppHandle) {
 
     // Attempt to connect with retries
     loop {
-        match client.connect().await {
+        match client.connect_with_config(&host, port).await {
             Ok(_) => {
                 info!("Successfully connected to coordinator");
 

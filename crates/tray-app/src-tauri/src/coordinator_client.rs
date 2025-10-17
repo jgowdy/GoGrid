@@ -97,12 +97,8 @@ impl CoordinatorClient {
         }
     }
 
-    pub async fn connect(&mut self) -> Result<()> {
-        let coordinator_host = get_coordinator_host()
-            .ok_or_else(|| anyhow::anyhow!("GOGRID_COORDINATOR_HOST environment variable not set"))?;
-        let coordinator_port = get_coordinator_port()
-            .ok_or_else(|| anyhow::anyhow!("GOGRID_COORDINATOR_PORT environment variable not set"))?;
-        info!("Connecting to coordinator at {}:{}...", coordinator_host, coordinator_port);
+    pub async fn connect_with_config(&mut self, host: &str, port: u16) -> Result<()> {
+        info!("Connecting to coordinator at {}:{}...", host, port);
 
         // Create QUIC client configuration with relaxed certificate verification
         // In production, we should use proper certificate verification
@@ -130,11 +126,11 @@ impl CoordinatorClient {
         endpoint.set_default_client_config(client_config);
 
         // Connect to coordinator
-        let server_addr = match format!("{}:{}", coordinator_host, coordinator_port).parse::<SocketAddr>() {
+        let server_addr = match format!("{}:{}", host, port).parse::<SocketAddr>() {
             Ok(addr) => addr,
             Err(_) => {
                 // If parsing fails, try DNS resolution
-                tokio::net::lookup_host(format!("{}:{}", coordinator_host, coordinator_port))
+                tokio::net::lookup_host(format!("{}:{}", host, port))
                     .await
                     .context("Failed to resolve hostname")?
                     .next()
@@ -143,7 +139,7 @@ impl CoordinatorClient {
         };
 
         let connection = endpoint
-            .connect(server_addr, &coordinator_host)
+            .connect(server_addr, host)
             .context("Failed to initiate connection")?
             .await
             .context("Failed to establish connection")?;
