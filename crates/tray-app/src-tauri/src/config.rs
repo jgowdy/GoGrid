@@ -4,6 +4,31 @@ use std::fs;
 use std::path::PathBuf;
 use tracing::{info, warn};
 
+// Embedded default coordinator settings - these can be patched by the deployment script
+// The strings are padded with spaces to allow for in-place replacement in the binary
+const EMBEDDED_DEFAULT_HOST: &str = "__GOGRID_DEFAULT_HOST________________";
+const EMBEDDED_DEFAULT_PORT: &str = "__GOGRID_DEFAULT_PORT____";
+
+/// Get the embedded default host, stripping any placeholder padding
+fn get_embedded_host() -> Option<String> {
+    let host = EMBEDDED_DEFAULT_HOST.trim_end_matches('_').trim();
+    if host.is_empty() || host == "__GOGRID_DEFAULT_HOST" {
+        None
+    } else {
+        Some(host.to_string())
+    }
+}
+
+/// Get the embedded default port
+fn get_embedded_port() -> Option<u16> {
+    let port_str = EMBEDDED_DEFAULT_PORT.trim_end_matches('_').trim();
+    if port_str.starts_with("__GOGRID_DEFAULT_PORT") {
+        None
+    } else {
+        port_str.parse().ok()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub coordinator: CoordinatorConfig,
@@ -31,10 +56,13 @@ pub struct WorkerConfig {
 
 impl Default for Config {
     fn default() -> Self {
+        let default_host = get_embedded_host().unwrap_or_default();
+        let default_port = get_embedded_port().unwrap_or(8443);
+
         Self {
             coordinator: CoordinatorConfig {
-                host: String::new(),
-                port: 8443,
+                host: default_host,
+                port: default_port,
             },
             updates: UpdatesConfig {
                 enabled: true,
@@ -186,13 +214,23 @@ impl Config {
         warn!("  {}", config_path.display());
         warn!("After configuring, restart GoGrid Worker.");
 
-        // Create a template config file
+        // Create a template config file with embedded defaults or placeholder
         let mut config = Config::default();
-        config.coordinator.host = "your-coordinator-server.com".to_string();
-        config.coordinator.port = 8443;
-        config.updates.endpoints = vec![
-            "https://your-coordinator-server.com:8443/updates/{{target}}/{{current_version}}".to_string()
-        ];
+
+        // If no embedded defaults, use placeholder
+        if config.coordinator.host.is_empty() {
+            config.coordinator.host = "your-coordinator-server.com".to_string();
+            config.updates.endpoints = vec![
+                "https://your-coordinator-server.com:8443/updates/{{target}}/{{current_version}}".to_string()
+            ];
+        } else {
+            // Use embedded defaults for update endpoints too
+            config.updates.endpoints = vec![
+                format!("https://{}:{}/updates/{{{{target}}}}/{{{{current_version}}}}",
+                        config.coordinator.host, config.coordinator.port)
+            ];
+        }
+
         config.save()?;
 
         Err(anyhow::anyhow!(
