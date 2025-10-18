@@ -8,9 +8,10 @@ license.workspace = true
 [features]
 default = []
 # Enable CUDA support (requires CUDA toolkit - build on Linux/Windows with NVIDIA GPUs)
-cuda = []
+# This propagates cuda to mistralrs and candle dependencies on platforms that support it
+cuda = ["mistralrs/cuda", "candle-core/cuda", "candle-nn/cuda"]
 # Enable Flash Attention v2 for faster long-context inference (CUDA only)
-flash-attention = []
+flash-attention = ["candle-flash-attn"]
 # Enable quantization support for memory-efficient inference
 quantization = []
 # Enable GGUF/llama.cpp quantization format support (uses native candle-core)
@@ -126,16 +127,18 @@ mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git", features =
 candle-core = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["metal"] }
 candle-nn = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["metal"] }
 
-# Linux: CUDA support only
+# Linux: CPU-only by default
+# NOTE: For GPU acceleration on Linux (CUDA), the workflow must explicitly enable the cuda feature flag
 [target.'cfg(target_os = "linux")'.dependencies]
-mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git", features = ["cuda"], default-features = false }
-candle-core = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["cuda"] }
-candle-nn = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["cuda"] }
+mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git", default-features = false }
+candle-core = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", default-features = false }
+candle-nn = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", default-features = false }
 candle-flash-attn = { version = "0.9", optional = true }
 
-# Windows: CUDA support only
+# Windows: CPU-only by default
+# NOTE: For GPU acceleration on Windows (CUDA), the workflow must explicitly enable the cuda feature flag
 [target.'cfg(target_os = "windows")'.dependencies]
-mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git", features = ["cuda"], default-features = false }
-candle-core = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["cuda"] }
-candle-nn = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", features = ["cuda"] }
+mistralrs = { git = "https://github.com/EricLBuehler/mistral.rs.git", default-features = false }
+candle-core = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", default-features = false }
+candle-nn = { git = "https://github.com/EricLBuehler/candle.git", rev = "7511e510", default-features = false }
 candle-flash-attn = { version = "0.9", optional = true }
