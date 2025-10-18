@@ -26,8 +26,11 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Add Rust targets
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -145,19 +148,13 @@ jobs:
           cd crates/tray-app/src-tauri
           cargo tauri build
 
-      - name: Package for updates
-        run: |
-          cd target/release/bundle/appimage
-          tar -czf "GoGrid_Worker_${{ github.event.inputs.version || '0.1.0' }}_amd64.AppImage.tar.gz" *.AppImage
-
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-x86_64
           path: |
-            target/release/bundle/appimage/GoGrid_Worker_*.AppImage.tar.gz
-            target/release/bundle/appimage/*.AppImage
             target/release/bundle/deb/*.deb
+            target/release/bundle/rpm/*.rpm
 
   build-windows:
     name: Build Windows (x86_64)
