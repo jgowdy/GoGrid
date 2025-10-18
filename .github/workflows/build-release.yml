@@ -127,6 +127,7 @@ jobs:
         run: |
           export PATH="/usr/local/cuda-12.4/bin:$PATH"
           export LD_LIBRARY_PATH="/usr/local/cuda-12.4/lib64:$LD_LIBRARY_PATH"
+          export CUDA_COMPUTE_CAP=86
           cargo build --release --bin corpgrid-scheduler --features cuda
           cp target/release/corpgrid-scheduler target/release/corpgrid-scheduler-x86_64-unknown-linux-gnu
 
