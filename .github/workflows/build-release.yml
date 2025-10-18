@@ -111,12 +111,18 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev
 
+      - name: Install CUDA
+        uses: Jimver/cuda-toolkit@v0.2.16
+        with:
+          cuda: '12.4.0'
+          method: 'network'
+
       - name: Install Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Build scheduler
+      - name: Build scheduler with CUDA
         run: |
-          cargo build --release --bin corpgrid-scheduler
+          cargo build --release --bin corpgrid-scheduler --features cuda
           cp target/release/corpgrid-scheduler target/release/corpgrid-scheduler-x86_64-unknown-linux-gnu
 
       - name: Install Tauri CLI
