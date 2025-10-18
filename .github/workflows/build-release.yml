@@ -40,11 +40,13 @@ jobs:
       - name: Build scheduler (ARM64)
         run: |
           cargo build --release --bin corpgrid-scheduler --target aarch64-apple-darwin
+          mkdir -p target/release
           cp target/aarch64-apple-darwin/release/corpgrid-scheduler target/release/corpgrid-scheduler-aarch64-apple-darwin
 
       - name: Build scheduler (x86_64)
         run: |
           cargo build --release --bin corpgrid-scheduler --target x86_64-apple-darwin
+          mkdir -p target/release
           cp target/x86_64-apple-darwin/release/corpgrid-scheduler target/release/corpgrid-scheduler-x86_64-apple-darwin
 
       - name: Install Tauri CLI
@@ -117,12 +119,11 @@ jobs:
 
       - name: Install CUDA
         run: |
-          # Install only CUDA compiler and libraries, not the full toolkit
-          # Full toolkit has incompatible dependencies on Ubuntu 24.04
+          # Install CUDA compiler and required libraries for linking
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
           sudo dpkg -i cuda-keyring_1.1-1_all.deb
           sudo apt-get update
-          sudo apt-get install -y cuda-nvcc-12-4 cuda-cudart-dev-12-4 libcublas-dev-12-4
+          sudo apt-get install -y cuda-nvcc-12-4 cuda-cudart-dev-12-4 libcublas-dev-12-4 cuda-nvrtc-dev-12-4 libcurand-dev-12-4
 
       - name: Install Rust cache
         uses: Swatinem/rust-cache@v2
