@@ -112,7 +112,8 @@ jobs:
             libxdo-dev \
             libssl-dev \
             libayatana-appindicator3-dev \
-            librsvg2-dev
+            librsvg2-dev \
+            protobuf-compiler
 
       - name: Install CUDA
         run: |
@@ -161,6 +162,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install protobuf
+        run: choco install protoc -y
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
