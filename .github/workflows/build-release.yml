@@ -65,31 +65,21 @@ jobs:
           cd crates/tray-app/src-tauri
           cargo tauri build --target x86_64-apple-darwin
 
-      - name: Package for updates (ARM64)
-        run: |
-          cd target/aarch64-apple-darwin/release/bundle/macos
-          tar -czf "GoGrid_Worker_${{ github.event.inputs.version || '0.1.0' }}_aarch64.app.tar.gz" "GoGrid Worker.app"
-
-      - name: Package for updates (x86_64)
-        run: |
-          cd target/x86_64-apple-darwin/release/bundle/macos
-          tar -czf "GoGrid_Worker_${{ github.event.inputs.version || '0.1.0' }}_x64.app.tar.gz" "GoGrid Worker.app"
-
       - name: Upload macOS ARM64 artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-aarch64
           path: |
-            target/aarch64-apple-darwin/release/bundle/macos/GoGrid_Worker_*.app.tar.gz
             target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            target/aarch64-apple-darwin/release/bundle/macos/*.app
 
       - name: Upload macOS x86_64 artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-x86_64
           path: |
-            target/x86_64-apple-darwin/release/bundle/macos/GoGrid_Worker_*.app.tar.gz
             target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+            target/x86_64-apple-darwin/release/bundle/macos/*.app
 
   build-linux:
     name: Build Linux (x86_64)
@@ -189,18 +179,11 @@ jobs:
           cd crates/tray-app/src-tauri
           cargo tauri build
 
-      - name: Package for updates (NSIS)
-        run: |
-          cd target\release\bundle\nsis
-          tar -czf "GoGrid_Worker_${{ github.event.inputs.version || '0.1.0' }}_x64-setup.nsis.zip" *.exe
-        shell: bash
-
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-x86_64
           path: |
-            target/release/bundle/nsis/GoGrid_Worker_*.nsis.zip
             target/release/bundle/nsis/*.exe
             target/release/bundle/msi/*.msi
 
