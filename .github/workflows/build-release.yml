@@ -234,28 +234,30 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.COORDINATOR_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p 220 -H ${{ secrets.COORDINATOR_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to update server
         run: |
           # Create updates directory
-          ssh ${{ secrets.COORDINATOR_HOST }} "sudo mkdir -p /opt/gogrid/updates && sudo chown $USER:$USER /opt/gogrid/updates"
+          ssh -p 220 ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }} "doas mkdir -p /opt/gogrid/updates && doas chown ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/gogrid/updates"
 
           # Upload all update packages
-          scp artifacts/**/*.tar.gz ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/
-          scp artifacts/**/*.zip ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/
+          scp -P 220 artifacts/**/*.tar.gz ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
+          scp -P 220 artifacts/**/*.zip ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
 
           # Upload installer files
-          scp artifacts/**/*.dmg ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.AppImage ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.exe ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
+          scp -P 220 artifacts/**/*.dmg ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
+          scp -P 220 artifacts/**/*.deb ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
+          scp -P 220 artifacts/**/*.rpm ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
+          scp -P 220 artifacts/**/*.exe ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
+          scp -P 220 artifacts/**/*.msi ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/updates/ || true
 
           # Build and deploy coordinator
           cargo build --release --bin gogrid-coordinator
-          scp target/release/gogrid-coordinator ${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/bin/
+          scp -P 220 target/release/gogrid-coordinator ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }}:/opt/gogrid/bin/
 
           # Restart coordinator
-          ssh ${{ secrets.COORDINATOR_HOST }} "sudo systemctl restart gogrid-coordinator"
+          ssh -p 220 ${{ secrets.SSH_USER }}@${{ secrets.COORDINATOR_HOST }} "doas rcctl restart gogrid_coordinator"
 
           echo "Deployment complete!"
           echo "Downloads available at: https://${{ secrets.COORDINATOR_HOST }}:8443/downloads"
