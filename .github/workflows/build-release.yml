@@ -252,12 +252,15 @@ jobs:
           # Upload artifacts to ngrok endpoint using PUT
           echo "Uploading artifacts to ngrok endpoint..."
 
-          for file in artifacts/**/*.tar.gz artifacts/**/*.zip artifacts/**/*.dmg artifacts/**/*.deb artifacts/**/*.rpm artifacts/**/*.exe artifacts/**/*.msi; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              echo "Uploading: $filename"
-              curl -X PUT --data-binary "@$file" "https://ophthalmologic-linnie-connectedly.ngrok-free.dev/$filename" || echo "Failed to upload $filename"
-            fi
+          # List all artifacts for debugging
+          echo "Available artifacts:"
+          find artifacts -type f
+
+          # Upload all bundle files
+          find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.exe" -o -name "*.msi" -o -name "*.app" \) | while read file; do
+            filename=$(basename "$file")
+            echo "Uploading: $filename"
+            curl -X PUT --data-binary "@$file" "https://ophthalmologic-linnie-connectedly.ngrok-free.dev/$filename" || echo "Failed to upload $filename"
           done
 
           echo "Deployment complete!"
