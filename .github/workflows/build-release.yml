@@ -249,26 +249,16 @@ jobs:
 
       - name: Deploy to update server
         run: |
-          # Create updates directory
-          ssh bx.ee "doas mkdir -p /opt/gogrid/updates && doas chown ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /opt/gogrid/updates"
+          # Upload artifacts to ngrok endpoint using PUT
+          echo "Uploading artifacts to ngrok endpoint..."
 
-          # Upload all update packages
-          scp artifacts/**/*.tar.gz bx.ee:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.zip bx.ee:/opt/gogrid/updates/ || true
-
-          # Upload installer files
-          scp artifacts/**/*.dmg bx.ee:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.deb bx.ee:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.rpm bx.ee:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.exe bx.ee:/opt/gogrid/updates/ || true
-          scp artifacts/**/*.msi bx.ee:/opt/gogrid/updates/ || true
-
-          # Build and deploy coordinator
-          cargo build --release --bin gogrid-coordinator
-          scp target/release/gogrid-coordinator bx.ee:/opt/gogrid/bin/
-
-          # Restart coordinator
-          ssh bx.ee "doas rcctl restart gogrid_coordinator"
+          for file in artifacts/**/*.tar.gz artifacts/**/*.zip artifacts/**/*.dmg artifacts/**/*.deb artifacts/**/*.rpm artifacts/**/*.exe artifacts/**/*.msi; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              echo "Uploading: $filename"
+              curl -X PUT --data-binary "@$file" "https://ophthalmologic-linnie-connectedly.ngrok-free.dev/$filename" || echo "Failed to upload $filename"
+            fi
+          done
 
           echo "Deployment complete!"
-          echo "Downloads available at: https://${{ secrets.COORDINATOR_HOST }}:8443/downloads"
+          echo "Files uploaded to ngrok endpoint"
