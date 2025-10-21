@@ -259,8 +259,10 @@ jobs:
           # Upload all bundle files
           find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.exe" -o -name "*.msi" -o -name "*.app" \) | while read file; do
             filename=$(basename "$file")
+            # URL encode the filename
+            filename_encoded=$(printf %s "$filename" | jq -sRr @uri)
             echo "Uploading: $filename"
-            curl -X PUT --data-binary "@$file" "https://ophthalmologic-linnie-connectedly.ngrok-free.dev/$filename" || echo "Failed to upload $filename"
+            curl -X PUT --data-binary "@$file" "https://ophthalmologic-linnie-connectedly.ngrok-free.dev/$filename_encoded" || echo "Failed to upload $filename"
           done
 
           echo "Deployment complete!"
