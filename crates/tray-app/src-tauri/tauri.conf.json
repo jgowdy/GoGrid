@@ -18,7 +18,7 @@
       "iconPath": "icons/icon.png",
       "iconAsTemplate": true,
       "menuOnLeftClick": false,
-      "tooltip": "gogrid-worker"
+      "tooltip": "GoGrid Worker"
     }
   },
   "plugins": {
