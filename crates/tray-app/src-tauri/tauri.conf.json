@@ -1,5 +1,5 @@
 {
-  "productName": "GoGrid Worker",
+  "productName": "gogrid-worker",
   "version": "0.1.0",
   "identifier": "com.gogrid.worker",
   "build": {
@@ -18,7 +18,7 @@
       "iconPath": "icons/icon.png",
       "iconAsTemplate": true,
       "menuOnLeftClick": false,
-      "tooltip": "GoGrid Worker"
+      "tooltip": "gogrid-worker"
     }
   },
   "plugins": {
