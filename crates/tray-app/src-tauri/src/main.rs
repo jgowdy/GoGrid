@@ -323,9 +323,6 @@ async fn check_for_updates(app: tauri::AppHandle) {
 
     info!("Checking for updates...");
 
-    // Wait a bit on startup to let coordinator connection establish first
-    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
     loop {
         match app.updater() {
             Ok(updater) => {

@@ -247,23 +247,56 @@ jobs:
           EOF
           chmod 600 ~/.ssh/config
 
-      - name: Deploy to update server
+      - name: Generate update manifest
         run: |
-          # Upload artifacts to ngrok endpoint using PUT
-          echo "Uploading artifacts to ngrok endpoint..."
+          # Get version from tauri.conf.json
+          VERSION=$(jq -r .version crates/tray-app/src-tauri/tauri.conf.json)
+          DATE=$(date -u +"%Y-%m-%d")
 
-          # List all artifacts for debugging
-          echo "Available artifacts:"
-          find artifacts -type f
+          echo "Generating update manifest for version $VERSION"
 
-          # Upload all bundle files
-          find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.exe" -o -name "*.msi" -o -name "*.app" \) | while read file; do
-            filename=$(basename "$file")
-            # URL encode the filename
-            filename_encoded=$(printf %s "$filename" | jq -sRr @uri)
-            echo "Uploading: $filename"
-            curl -X PUT --data-binary "@$file" "https://ophthalmologic-linnie-connectedly.ngrok-free.dev/$filename_encoded" || echo "Failed to upload $filename"
-          done
+          # Create manifest JSON
+          cat > artifacts/latest.json << EOF
+          {
+            "version": "$VERSION",
+            "date": "$DATE",
+            "platforms": {
+              "darwin-aarch64": {
+                "url": "https://bx.ee/updates/gogrid-worker_${VERSION}_aarch64.dmg"
+              },
+              "darwin-x86_64": {
+                "url": "https://bx.ee/updates/gogrid-worker_${VERSION}_x64.dmg"
+              },
+              "linux-x86_64": {
+                "url": "https://bx.ee/updates/gogrid-worker_${VERSION}_amd64.deb"
+              },
+              "windows-x86_64": {
+                "url": "https://bx.ee/updates/gogrid-worker_${VERSION}_x64-setup.exe"
+              }
+            }
+          }
+          EOF
+
+          echo "Generated manifest:"
+          cat artifacts/latest.json
+
+      - name: Deploy to bx.ee
+        run: |
+          echo "Deploying to bx.ee update server..."
+
+          # Create remote updates directory
+          ssh bx.ee "mkdir -p /var/www/updates"
+
+          # Upload all artifacts
+          echo "Uploading artifacts..."
+          find artifacts -type f \( -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.exe" -o -name "*.msi" \) -exec scp {} bx.ee:/var/www/updates/ \;
+
+          # Upload manifest
+          echo "Uploading update manifest..."
+          scp artifacts/latest.json bx.ee:/var/www/updates/latest.json
+
+          # Set permissions
+          ssh bx.ee "chmod -R 644 /var/www/updates/*"
 
           echo "Deployment complete!"
-          echo "Files uploaded to ngrok endpoint"
+          echo "Updates available at https://bx.ee/updates/"
