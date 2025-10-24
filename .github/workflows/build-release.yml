@@ -284,8 +284,8 @@ jobs:
         run: |
           echo "Deploying to bx.ee update server..."
 
-          # Create remote updates directory
-          ssh bx.ee "mkdir -p /var/www/updates"
+          # Create remote updates directory with sudo
+          ssh bx.ee "doas mkdir -p /var/www/updates && doas chown jgowdy:jgowdy /var/www/updates"
 
           # Upload all artifacts
           echo "Uploading artifacts..."
@@ -296,7 +296,7 @@ jobs:
           scp artifacts/latest.json bx.ee:/var/www/updates/latest.json
 
           # Set permissions
-          ssh bx.ee "chmod -R 644 /var/www/updates/*"
+          ssh bx.ee "chmod 644 /var/www/updates/*"
 
           echo "Deployment complete!"
           echo "Updates available at https://bx.ee/updates/"
