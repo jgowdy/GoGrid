@@ -37,6 +37,22 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install sccache
+        run: brew install sccache
+
+      - name: Cache sccache
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Mozilla.sccache
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
+
+      - name: Configure sccache
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "SCCACHE_DIR=$HOME/Library/Caches/Mozilla.sccache" >> $GITHUB_ENV
+
       - name: Install Rust cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -76,6 +92,9 @@ jobs:
           cd crates/tray-app/src-tauri
           cargo tauri build --target x86_64-apple-darwin
 
+      - name: Show sccache stats
+        run: sccache --show-stats
+
       - name: Upload macOS ARM64 artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -105,6 +124,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Install sccache
+        run: |
+          wget https://github.com/mozilla/sccache/releases/download/v0.8.1/sccache-v0.8.1-x86_64-unknown-linux-musl.tar.gz
+          tar xzf sccache-v0.8.1-x86_64-unknown-linux-musl.tar.gz
+          sudo mv sccache-v0.8.1-x86_64-unknown-linux-musl/sccache /usr/local/bin/
+          chmod +x /usr/local/bin/sccache
+
+      - name: Cache sccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/sccache
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
+
+      - name: Configure sccache
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "SCCACHE_DIR=$HOME/.cache/sccache" >> $GITHUB_ENV
 
       - name: Cache system dependencies
         uses: actions/cache@v4
@@ -174,6 +213,9 @@ jobs:
           cd crates/tray-app/src-tauri
           cargo tauri build --bundles deb,rpm
 
+      - name: Show sccache stats
+        run: sccache --show-stats
+
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -198,6 +240,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Install sccache
+        run: choco install sccache -y
+
+      - name: Cache sccache
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\Mozilla\sccache\cache
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
+
+      - name: Configure sccache
+        run: |
+          echo "RUSTC_WRAPPER=sccache" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install Rust cache
         uses: Swatinem/rust-cache@v2
@@ -225,6 +282,9 @@ jobs:
         run: |
           cd crates/tray-app/src-tauri
           cargo tauri build
+
+      - name: Show sccache stats
+        run: sccache --show-stats
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
