@@ -77,7 +77,7 @@ jobs:
       - name: Build Tauri app (ARM64)
         run: |
           cd crates/tray-app/src-tauri
-          cargo tauri build --target aarch64-apple-darwin -- --profile ci
+          cargo tauri build --profile ci --target aarch64-apple-darwin
 
       - name: Show sccache stats
         run: sccache --show-stats
@@ -191,7 +191,7 @@ jobs:
       - name: Build Tauri app
         run: |
           cd crates/tray-app/src-tauri
-          cargo tauri build --bundles deb,rpm -- --profile ci
+          cargo tauri build --profile ci --bundles deb,rpm
 
       - name: Show sccache stats
         run: sccache --show-stats
@@ -262,7 +262,7 @@ jobs:
       - name: Build Tauri app
         run: |
           cd crates/tray-app/src-tauri
-          cargo tauri build -- --profile ci
+          cargo tauri build --profile ci
 
       - name: Show sccache stats
         run: sccache --show-stats
