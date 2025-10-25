@@ -70,14 +70,14 @@ jobs:
 
       - name: Build scheduler (ARM64)
         run: |
-          cargo build --release --bin corpgrid-scheduler --target aarch64-apple-darwin
+          cargo build --profile ci --bin corpgrid-scheduler --target aarch64-apple-darwin
           mkdir -p target/release
-          cp target/aarch64-apple-darwin/release/corpgrid-scheduler target/release/corpgrid-scheduler-aarch64-apple-darwin
+          cp target/aarch64-apple-darwin/ci/corpgrid-scheduler target/release/corpgrid-scheduler-aarch64-apple-darwin
 
       - name: Build Tauri app (ARM64)
         run: |
           cd crates/tray-app/src-tauri
-          cargo tauri build --target aarch64-apple-darwin
+          cargo tauri build --target aarch64-apple-darwin -- --profile ci
 
       - name: Show sccache stats
         run: sccache --show-stats
@@ -87,8 +87,8 @@ jobs:
         with:
           name: macos-aarch64
           path: |
-            target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
-            target/aarch64-apple-darwin/release/bundle/macos/*.app
+            target/aarch64-apple-darwin/ci/bundle/dmg/*.dmg
+            target/aarch64-apple-darwin/ci/bundle/macos/*.app
 
   build-linux:
     name: Build Linux (x86_64)
@@ -184,13 +184,14 @@ jobs:
           export LD_LIBRARY_PATH="/usr/local/cuda-12.4/lib64:$LD_LIBRARY_PATH"
           export LIBRARY_PATH="/usr/local/cuda-12.4/lib64:$LIBRARY_PATH"
           export CUDA_COMPUTE_CAP=86
-          cargo build --release --bin corpgrid-scheduler --features cuda
-          cp target/release/corpgrid-scheduler target/release/corpgrid-scheduler-x86_64-unknown-linux-gnu
+          cargo build --profile ci --bin corpgrid-scheduler --features cuda
+          mkdir -p target/release
+          cp target/ci/corpgrid-scheduler target/release/corpgrid-scheduler-x86_64-unknown-linux-gnu
 
       - name: Build Tauri app
         run: |
           cd crates/tray-app/src-tauri
-          cargo tauri build --bundles deb,rpm
+          cargo tauri build --bundles deb,rpm -- --profile ci
 
       - name: Show sccache stats
         run: sccache --show-stats
@@ -200,8 +201,8 @@ jobs:
         with:
           name: linux-x86_64
           path: |
-            target/release/bundle/deb/*.deb
-            target/release/bundle/rpm/*.rpm
+            target/ci/bundle/deb/*.deb
+            target/ci/bundle/rpm/*.rpm
 
   build-windows:
     name: Build Windows (x86_64)
@@ -254,13 +255,14 @@ jobs:
 
       - name: Build scheduler
         run: |
-          cargo build --release --bin corpgrid-scheduler
-          copy target\release\corpgrid-scheduler.exe target\release\corpgrid-scheduler-x86_64-pc-windows-msvc.exe
+          cargo build --profile ci --bin corpgrid-scheduler
+          if not exist target\release mkdir target\release
+          copy target\ci\corpgrid-scheduler.exe target\release\corpgrid-scheduler-x86_64-pc-windows-msvc.exe
 
       - name: Build Tauri app
         run: |
           cd crates/tray-app/src-tauri
-          cargo tauri build
+          cargo tauri build -- --profile ci
 
       - name: Show sccache stats
         run: sccache --show-stats
@@ -270,8 +272,8 @@ jobs:
         with:
           name: windows-x86_64
           path: |
-            target/release/bundle/nsis/*.exe
-            target/release/bundle/msi/*.msi
+            target/ci/bundle/nsis/*.exe
+            target/ci/bundle/msi/*.msi
 
   create-release:
     name: Create GitHub Release
