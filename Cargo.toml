@@ -72,9 +72,8 @@ lto = "thin"
 codegen-units = 1
 strip = true
 
-# Fast CI builds - parallel compilation, less optimization
+# Fast CI builds - parallel compilation
 [profile.ci]
 inherits = "release"
 lto = false
 codegen-units = 16
-incremental = true

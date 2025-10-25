@@ -256,8 +256,8 @@ jobs:
       - name: Build scheduler
         run: |
           cargo build --profile ci --bin corpgrid-scheduler
-          if not exist target\release mkdir target\release
-          copy target\ci\corpgrid-scheduler.exe target\release\corpgrid-scheduler-x86_64-pc-windows-msvc.exe
+          if (!(Test-Path target\release)) { New-Item -ItemType Directory -Path target\release }
+          Copy-Item target\ci\corpgrid-scheduler.exe target\release\corpgrid-scheduler-x86_64-pc-windows-msvc.exe
 
       - name: Build Tauri app
         run: |
