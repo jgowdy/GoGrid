@@ -39,6 +39,20 @@ jobs:
 
       - name: Install Rust cache
         uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "gogrid-macos"
+          cache-on-failure: true
+
+      - name: Cache Tauri CLI
+        uses: actions/cache@v4
+        id: tauri-cache
+        with:
+          path: ~/.cargo/bin/cargo-tauri
+          key: ${{ runner.os }}-tauri-cli-2.8.0
+
+      - name: Install Tauri CLI
+        if: steps.tauri-cache.outputs.cache-hit != 'true'
+        run: cargo install tauri-cli --version '=2.8.0' --locked
 
       - name: Build scheduler (ARM64)
         run: |
@@ -51,9 +65,6 @@ jobs:
           cargo build --release --bin corpgrid-scheduler --target x86_64-apple-darwin
           mkdir -p target/release
           cp target/x86_64-apple-darwin/release/corpgrid-scheduler target/release/corpgrid-scheduler-x86_64-apple-darwin
-
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli --version '=2.8.0' --locked
 
       - name: Build Tauri app (ARM64)
         run: |
@@ -95,6 +106,13 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Cache system dependencies
+        uses: actions/cache@v4
+        id: apt-cache
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-deps-v2
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -110,9 +128,16 @@ jobs:
             librsvg2-dev \
             protobuf-compiler
 
+      - name: Cache CUDA
+        uses: actions/cache@v4
+        id: cuda-cache
+        with:
+          path: /usr/local/cuda-12.4
+          key: ${{ runner.os }}-cuda-12.4-v2
+
       - name: Install CUDA
+        if: steps.cuda-cache.outputs.cache-hit != 'true'
         run: |
-          # Install CUDA compiler and required libraries for linking
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
           sudo dpkg -i cuda-keyring_1.1-1_all.deb
           sudo apt-get update
@@ -120,6 +145,20 @@ jobs:
 
       - name: Install Rust cache
         uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "gogrid-linux"
+          cache-on-failure: true
+
+      - name: Cache Tauri CLI
+        uses: actions/cache@v4
+        id: tauri-cache
+        with:
+          path: ~/.cargo/bin/cargo-tauri
+          key: ${{ runner.os }}-tauri-cli-2.8.0
+
+      - name: Install Tauri CLI
+        if: steps.tauri-cache.outputs.cache-hit != 'true'
+        run: cargo install tauri-cli --version '=2.8.0' --locked
 
       - name: Build scheduler with CUDA
         run: |
@@ -129,9 +168,6 @@ jobs:
           export CUDA_COMPUTE_CAP=86
           cargo build --release --bin corpgrid-scheduler --features cuda
           cp target/release/corpgrid-scheduler target/release/corpgrid-scheduler-x86_64-unknown-linux-gnu
-
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli --version '=2.8.0' --locked
 
       - name: Build Tauri app
         run: |
@@ -165,14 +201,25 @@ jobs:
 
       - name: Install Rust cache
         uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "gogrid-windows"
+          cache-on-failure: true
+
+      - name: Cache Tauri CLI
+        uses: actions/cache@v4
+        id: tauri-cache
+        with:
+          path: ~/.cargo/bin/cargo-tauri.exe
+          key: ${{ runner.os }}-tauri-cli-2.8.0
+
+      - name: Install Tauri CLI
+        if: steps.tauri-cache.outputs.cache-hit != 'true'
+        run: cargo install tauri-cli --version '=2.8.0' --locked
 
       - name: Build scheduler
         run: |
           cargo build --release --bin corpgrid-scheduler
           copy target\release\corpgrid-scheduler.exe target\release\corpgrid-scheduler-x86_64-pc-windows-msvc.exe
-
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli --version '=2.8.0' --locked
 
       - name: Build Tauri app
         run: |
